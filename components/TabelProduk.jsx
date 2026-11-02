@@ -1,5 +1,7 @@
 import { formatRupiah } from "@/lib/format";
 import Tombol from "@/components/Tombol";
+import TombolHapus from "@/components/TombolHapus";
+import { hapusProdukAdmin } from "@/app/admin/actions";
 
 export default function TabelProduk({ daftarProduk }) {
   return (
@@ -15,26 +17,41 @@ export default function TabelProduk({ daftarProduk }) {
             </th>
           </tr>
         </thead>
+
         <tbody>
           {daftarProduk.map((produk) => (
             <tr key={produk.id} className="border-t border-garis">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <img src={produk.foto_url} alt="" className="h-10 w-10 rounded-md object-cover" />
+                  <img
+                    src={produk.foto_url}
+                    alt=""
+                    className="h-10 w-10 rounded-md object-cover"
+                  />
                   <span className="font-semibold">{produk.nama}</span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-teks-lembut">{produk.kategori}</td>
-              <td className="px-4 py-3">{formatRupiah(produk.harga)}</td>
+
+              <td className="px-4 py-3 text-teks-lembut">
+                {produk.kategori}
+              </td>
+
+              <td className="px-4 py-3">
+                {formatRupiah(produk.harga)}
+              </td>
+
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  {/* US-09 dan US-10 (bonus): ubah dan hapus produk */}
-                  <Tombol href={`/admin/produk/${produk.id}/ubah`} varian="garis">
+                  <Tombol
+                    href={`/admin/produk/${produk.id}/ubah`}
+                    varian="garis"
+                  >
                     Ubah
                   </Tombol>
-                  <Tombol type="button" varian="bahaya">
-                    Hapus
-                  </Tombol>
+
+                  <TombolHapus
+                    action={hapusProdukAdmin.bind(null, produk.id)}
+                  />
                 </div>
               </td>
             </tr>
