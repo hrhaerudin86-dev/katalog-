@@ -1,10 +1,14 @@
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import NavAdmin from "@/components/NavAdmin";
 import TabelProduk from "@/components/TabelProduk";
 import Tombol from "@/components/Tombol";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function HalamanAdmin() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: daftarProduk, error } = await supabase
     .from("produk")
@@ -21,7 +25,9 @@ export default async function HalamanAdmin() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold">Produk</h1>
-        <Tombol href="/admin/produk/baru">Tambah produk</Tombol>
+        <Tombol href="/admin/produk/baru">
+          Tambah produk
+        </Tombol>
       </div>
 
       <TabelProduk daftarProduk={daftarProduk ?? []} />
