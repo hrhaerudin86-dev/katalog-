@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -66,6 +65,20 @@ export default function FormProduk({
         defaultValue={produk.harga}
         required
       />
+
+      <Input
+        label="Jumlah Stok"
+        name="stok"
+        type="number"
+        min="0"
+        step="1"
+        defaultValue={produk.stok ?? 1}
+        required
+      />
+
+      <p className="text-xs text-teks-lembut">
+        Masukkan jumlah stok produk. Jika stok 0, produk akan dianggap habis.
+      </p>
 
       <Input
         label="Kategori"

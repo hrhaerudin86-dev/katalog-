@@ -1,5 +1,4 @@
-﻿
-"use server";
+﻿"use server";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -32,6 +31,21 @@ function ambilFotoGaleri(formData) {
     .map((url) => url.trim())
     .filter(Boolean)
     .slice(0, 10);
+}
+
+function ambilStok(formData) {
+  const nilaiStok = String(formData.get("stok") ?? "1").trim();
+  const stok = Number(nilaiStok);
+
+  if (
+    nilaiStok === "" ||
+    !Number.isInteger(stok) ||
+    stok < 0
+  ) {
+    return null;
+  }
+
+  return stok;
 }
 
 export async function loginAdmin(formData) {
@@ -106,6 +120,7 @@ export async function tambahProdukAdmin(formData) {
 
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
+  const stok = ambilStok(formData);
   const kategori = String(formData.get("kategori") || "").trim();
   const foto_url = String(formData.get("foto_url") || "").trim();
   const foto_galeri = ambilFotoGaleri(formData);
@@ -115,9 +130,14 @@ export async function tambahProdukAdmin(formData) {
     redirect("/admin/produk/baru?error=Data%20produk%20tidak%20valid");
   }
 
+  if (stok === null) {
+    redirect("/admin/produk/baru?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200");
+  }
+
   const { error } = await supabase.from("produk").insert({
     nama,
     harga,
+    stok,
     kategori,
     foto_url,
     foto_galeri,
@@ -141,9 +161,14 @@ export async function updateProdukAdmin(id, formData) {
 
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
+  const stok = ambilStok(formData);
 
   if (!nama || !Number.isFinite(harga) || harga < 0) {
     redirect(`/admin/produk/${id}/ubah?error=Data%20produk%20tidak%20valid`);
+  }
+
+  if (stok === null) {
+    redirect(`/admin/produk/${id}/ubah?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200`);
   }
 
   const { error } = await supabase
@@ -151,6 +176,7 @@ export async function updateProdukAdmin(id, formData) {
     .update({
       nama,
       harga,
+      stok,
       kategori: String(formData.get("kategori") || "").trim(),
       foto_url: String(formData.get("foto_url") || "").trim(),
       foto_galeri: ambilFotoGaleri(formData),

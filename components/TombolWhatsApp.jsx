@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,6 +5,9 @@ import { toko } from "@/lib/toko";
 import { formatRupiah } from "@/lib/format";
 
 export default function TombolWhatsApp({ produk }) {
+  const stok = Math.max(0, Math.floor(Number(produk.stok ?? 0)));
+  const stokHabis = stok <= 0;
+
   const [jumlah, setJumlah] = useState(1);
 
   const totalHarga = produk.harga * jumlah;
@@ -20,8 +22,25 @@ export default function TombolWhatsApp({ produk }) {
 
   const linkWhatsApp = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;
 
+  if (stokHabis) {
+    return (
+      <div className="flex flex-col gap-2">
+        <span className="w-fit rounded-lg bg-red-100 px-4 py-2 font-bold text-red-700">
+          Stok Habis
+        </span>
+        <p className="text-sm text-teks-lembut">
+          Maaf, produk ini sedang tidak tersedia.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-sm text-teks-lembut">
+        Stok tersedia: {stok}
+      </p>
+
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold">
           Jumlah produk
@@ -44,8 +63,8 @@ export default function TombolWhatsApp({ produk }) {
 
           <button
             type="button"
-            onClick={() => setJumlah((nilai) => Math.min(99, nilai + 1))}
-            disabled={jumlah >= 99}
+            onClick={() => setJumlah((nilai) => Math.min(stok, nilai + 1))}
+            disabled={jumlah >= stok}
             className="h-11 w-11 rounded-lg border border-garis font-bold disabled:opacity-40"
             aria-label="Tambah jumlah"
           >

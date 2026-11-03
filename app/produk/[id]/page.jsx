@@ -30,7 +30,7 @@ export default async function HalamanDetailProduk({ params }) {
   if (produk.kategori) {
     const { data } = await supabase
       .from("produk")
-      .select("id, nama, harga, deskripsi, foto_url, kategori, created_at")
+      .select("id, nama, harga, stok, deskripsi, foto_url, kategori, created_at")
       .eq("kategori", produk.kategori)
       .neq("id", id)
       .order("created_at", { ascending: false })
