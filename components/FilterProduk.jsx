@@ -1,13 +1,18 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import KartuProduk from "@/components/KartuProduk";
+
+const JUMLAH_PER_TAMPILAN = 12;
 
 export default function FilterProduk({ daftarProduk = [] }) {
   const [kataKunci, setKataKunci] = useState("");
   const [kategoriDipilih, setKategoriDipilih] = useState("Semua");
   const [urutan, setUrutan] = useState("terbaru");
+  const [jumlahDitampilkan, setJumlahDitampilkan] = useState(
+    JUMLAH_PER_TAMPILAN
+  );
 
   const daftarKategori = [
     "Semua",
@@ -61,6 +66,24 @@ export default function FilterProduk({ daftarProduk = [] }) {
     });
   }, [daftarProduk, kataKunci, kategoriDipilih, urutan]);
 
+  useEffect(() => {
+    setJumlahDitampilkan(JUMLAH_PER_TAMPILAN);
+  }, [kataKunci, kategoriDipilih, urutan]);
+
+  const produkDitampilkan = produkTersaring.slice(
+    0,
+    jumlahDitampilkan
+  );
+
+  const masihAdaProduk =
+    jumlahDitampilkan < produkTersaring.length;
+
+  function muatLebihBanyak() {
+    setJumlahDitampilkan((jumlahSebelumnya) =>
+      jumlahSebelumnya + JUMLAH_PER_TAMPILAN
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -89,7 +112,8 @@ export default function FilterProduk({ daftarProduk = [] }) {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-teks-lembut">
-          Menampilkan {produkTersaring.length} dari {daftarProduk.length} produk
+          Menampilkan {produkDitampilkan.length} dari{" "}
+          {produkTersaring.length} produk
         </p>
 
         <select
@@ -112,11 +136,25 @@ export default function FilterProduk({ daftarProduk = [] }) {
           Produk tidak ditemukan. Coba kata kunci atau kategori lain.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {produkTersaring.map((produk) => (
-            <KartuProduk key={produk.id} produk={produk} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            {produkDitampilkan.map((produk) => (
+              <KartuProduk key={produk.id} produk={produk} />
+            ))}
+          </div>
+
+          {masihAdaProduk && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={muatLebihBanyak}
+                className="rounded-xl border border-garis bg-permukaan px-6 py-3 text-sm font-semibold transition hover:bg-latar"
+              >
+                Muat Lebih Banyak
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
