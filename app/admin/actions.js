@@ -26,6 +26,14 @@ async function createSupabaseAuthClient() {
   );
 }
 
+function ambilFotoGaleri(formData) {
+  return String(formData.get("foto_galeri") || "")
+    .split(/\r?\n/)
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+}
+
 export async function loginAdmin(formData) {
   const email = formData.get("email");
   const password = formData.get("password");
@@ -100,6 +108,7 @@ export async function tambahProdukAdmin(formData) {
   const harga = Number(formData.get("harga"));
   const kategori = String(formData.get("kategori") || "").trim();
   const foto_url = String(formData.get("foto_url") || "").trim();
+  const foto_galeri = ambilFotoGaleri(formData);
   const deskripsi = String(formData.get("deskripsi") || "").trim();
 
   if (!nama || !Number.isFinite(harga) || harga < 0) {
@@ -111,6 +120,7 @@ export async function tambahProdukAdmin(formData) {
     harga,
     kategori,
     foto_url,
+    foto_galeri,
     deskripsi,
   });
 
@@ -141,9 +151,10 @@ export async function updateProdukAdmin(id, formData) {
     .update({
       nama,
       harga,
-      kategori: String(formData.get("kategori") || ""),
-      foto_url: String(formData.get("foto_url") || ""),
-      deskripsi: String(formData.get("deskripsi") || ""),
+      kategori: String(formData.get("kategori") || "").trim(),
+      foto_url: String(formData.get("foto_url") || "").trim(),
+      foto_galeri: ambilFotoGaleri(formData),
+      deskripsi: String(formData.get("deskripsi") || "").trim(),
     })
     .eq("id", id);
 

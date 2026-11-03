@@ -14,6 +14,11 @@ export default function FormProduk({
   const [nama, setNama] = useState(produk.nama || "");
   const [kategori, setKategori] = useState(produk.kategori || "");
   const [deskripsi, setDeskripsi] = useState(produk.deskripsi || "");
+  const [fotoGaleri, setFotoGaleri] = useState(
+    Array.isArray(produk.foto_galeri)
+      ? produk.foto_galeri.join("\n")
+      : ""
+  );
   const [memuatAI, setMemuatAI] = useState(false);
   const [pesanAI, setPesanAI] = useState("");
 
@@ -36,7 +41,7 @@ export default function FormProduk({
 
       setDeskripsi(hasil.deskripsi);
       setPesanAI("Deskripsi berhasil dibuat oleh AI.");
-    } catch (error) {
+    } catch {
       setPesanAI("Gagal menghubungi Gemini. Silakan coba lagi.");
     } finally {
       setMemuatAI(false);
@@ -70,11 +75,25 @@ export default function FormProduk({
       />
 
       <Input
-        label="Link foto"
+        label="Link foto utama"
         name="foto_url"
-        placeholder="https://... atau /produk/nama-file.svg"
+        placeholder="https://..."
         defaultValue={produk.foto_url}
       />
+
+      <Input
+        label="Link foto galeri (maksimal 10 URL)"
+        name="foto_galeri"
+        textarea
+        value={fotoGaleri}
+        onChange={(e) => setFotoGaleri(e.target.value)}
+        placeholder={"Masukkan satu URL per baris:\nhttps://contoh.com/foto1.jpg\nhttps://contoh.com/foto2.jpg"}
+      />
+
+      <p className="text-xs text-teks-lembut">
+        Foto utama tetap digunakan sebagai foto pertama. Masukkan URL foto
+        tambahan satu per baris, maksimal 10 foto.
+      </p>
 
       <div className="flex flex-col gap-2">
         <button
@@ -83,7 +102,9 @@ export default function FormProduk({
           disabled={memuatAI}
           className="w-fit rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {memuatAI ? "Sedang membuat deskripsi..." : "✨ Buat Deskripsi dengan AI"}
+          {memuatAI
+            ? "Sedang membuat deskripsi..."
+            : "✨ Buat Deskripsi dengan AI"}
         </button>
 
         {pesanAI && (
@@ -103,7 +124,9 @@ export default function FormProduk({
 
       <div className="flex gap-3">
         <Tombol type="submit">{labelTombol}</Tombol>
-        <Tombol href="/admin" varian="garis">Batal</Tombol>
+        <Tombol href="/admin" varian="garis">
+          Batal
+        </Tombol>
       </div>
     </form>
   );
