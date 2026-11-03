@@ -1,9 +1,9 @@
-
 "use client";
 
 import Link from "next/link";
 import { toko } from "@/lib/toko";
 import { useKeranjang } from "@/components/KeranjangProvider";
+import TombolMode from "@/components/TombolMode";
 
 export default function Header() {
   const { jumlahItem, siap } = useKeranjang();
@@ -18,16 +18,20 @@ export default function Header() {
           {toko.nama}
         </Link>
 
-        <Link
-          href="/keranjang"
-          className="flex items-center gap-2 rounded-xl border border-garis px-4 py-2 font-semibold text-utama transition hover:bg-permukaan"
-        >
-          <span>Keranjang</span>
+        <div className="flex items-center gap-2">
+          <TombolMode />
 
-          <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-utama px-1.5 text-xs font-bold text-white">
-            {siap ? jumlahItem : 0}
-          </span>
-        </Link>
+          <Link
+            href="/keranjang"
+            className="flex items-center gap-2 rounded-xl border border-garis px-4 py-2 font-semibold text-utama transition hover:bg-permukaan"
+          >
+            <span>Keranjang</span>
+
+            <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-utama px-1.5 text-xs font-bold text-white">
+              {siap ? jumlahItem : 0}
+            </span>
+          </Link>
+        </div>
       </div>
     </header>
   );
