@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
 import TombolTambahKeranjang from "@/components/TombolTambahKeranjang";
+import TombolBagikan from "@/components/TombolBagikan";
 import KartuProduk from "@/components/KartuProduk";
 import GaleriProduk from "@/components/GaleriProduk";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -110,6 +111,8 @@ export default async function HalamanDetailProduk({ params }) {
           <TombolTambahKeranjang produk={produk} />
 
           <TombolWhatsApp produk={produk} />
+
+          <TombolBagikan namaProduk={produk.nama} />
         </div>
       </article>
 
