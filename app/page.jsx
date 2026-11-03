@@ -1,3 +1,4 @@
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
 import FilterProduk from "@/components/FilterProduk";
@@ -14,7 +15,9 @@ export default async function HalamanKatalog() {
 
     const { data, error } = await supabase
       .from("produk")
-      .select("id, nama, harga, stok, deskripsi, foto_url, kategori, created_at")
+      .select(
+        "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {

@@ -1,8 +1,20 @@
+
 import Link from "next/link";
 import { formatRupiah } from "@/lib/format";
 
 export default function KartuProduk({ produk }) {
   const stokHabis = Number(produk.stok ?? 0) <= 0;
+
+  const hargaNormal = Number(produk.harga);
+  const hargaDiskon = Number(produk.harga_diskon);
+
+  const adaDiskon =
+    produk.harga_diskon !== null &&
+    produk.harga_diskon !== undefined &&
+    hargaDiskon > 0 &&
+    hargaDiskon < hargaNormal;
+
+  const badgeValid = ["Baru", "Terlaris"].includes(produk.badge);
 
   return (
     <Link
@@ -21,6 +33,12 @@ export default function KartuProduk({ produk }) {
             Habis
           </span>
         )}
+
+        {badgeValid && (
+          <span className="absolute right-3 top-3 rounded-full bg-utama px-3 py-1 text-xs font-bold text-white">
+            {produk.badge}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3">
@@ -32,9 +50,23 @@ export default function KartuProduk({ produk }) {
           {produk.nama}
         </h3>
 
-        <p className="mt-auto self-start rounded-md bg-harga-latar px-2 py-0.5 text-sm font-bold text-harga">
-          {formatRupiah(produk.harga)}
-        </p>
+        <div className="mt-auto self-start">
+          {adaDiskon ? (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-teks-lembut line-through">
+                {formatRupiah(hargaNormal)}
+              </span>
+
+              <span className="rounded-md bg-harga-latar px-2 py-0.5 text-sm font-bold text-harga">
+                {formatRupiah(hargaDiskon)}
+              </span>
+            </div>
+          ) : (
+            <p className="rounded-md bg-harga-latar px-2 py-0.5 text-sm font-bold text-harga">
+              {formatRupiah(produk.harga)}
+            </p>
+          )}
+        </div>
       </div>
     </Link>
   );

@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
@@ -25,12 +26,25 @@ export default async function HalamanDetailProduk({ params }) {
     notFound();
   }
 
+  const hargaNormal = Number(produk.harga);
+  const hargaDiskon = Number(produk.harga_diskon);
+
+  const adaDiskon =
+    produk.harga_diskon !== null &&
+    produk.harga_diskon !== undefined &&
+    hargaDiskon > 0 &&
+    hargaDiskon < hargaNormal;
+
+  const badgeValid = ["Baru", "Terlaris"].includes(produk.badge);
+
   let produkTerkait = [];
 
   if (produk.kategori) {
     const { data } = await supabase
       .from("produk")
-      .select("id, nama, harga, stok, deskripsi, foto_url, kategori, created_at")
+      .select(
+        "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
+      )
       .eq("kategori", produk.kategori)
       .neq("id", id)
       .order("created_at", { ascending: false })
@@ -42,11 +56,19 @@ export default async function HalamanDetailProduk({ params }) {
   return (
     <>
       <article className="grid gap-8 py-8 md:grid-cols-2 md:py-12">
-        <GaleriProduk
-          fotoUtama={produk.foto_url}
-          fotoGaleri={produk.foto_galeri}
-          namaProduk={produk.nama}
-        />
+        <div className="flex flex-col gap-3">
+          {badgeValid && (
+            <span className="self-start rounded-full bg-utama px-3 py-1 text-xs font-bold text-white">
+              {produk.badge}
+            </span>
+          )}
+
+          <GaleriProduk
+            fotoUtama={produk.foto_url}
+            fotoGaleri={produk.foto_galeri}
+            namaProduk={produk.nama}
+          />
+        </div>
 
         <div className="flex flex-col gap-4">
           <Link
@@ -64,9 +86,21 @@ export default async function HalamanDetailProduk({ params }) {
             {produk.nama}
           </h1>
 
-          <p className="self-start rounded-md bg-harga-latar px-3 py-1 text-xl font-bold text-harga">
-            {formatRupiah(produk.harga)}
-          </p>
+          {adaDiskon ? (
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-base text-teks-lembut line-through">
+                {formatRupiah(hargaNormal)}
+              </span>
+
+              <span className="rounded-md bg-harga-latar px-3 py-1 text-2xl font-bold text-harga">
+                {formatRupiah(hargaDiskon)}
+              </span>
+            </div>
+          ) : (
+            <p className="self-start rounded-md bg-harga-latar px-3 py-1 text-xl font-bold text-harga">
+              {formatRupiah(produk.harga)}
+            </p>
+          )}
 
           <p className="max-w-prose leading-relaxed text-teks-lembut">
             {produk.deskripsi}

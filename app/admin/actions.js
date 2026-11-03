@@ -37,15 +37,43 @@ function ambilStok(formData) {
   const nilaiStok = String(formData.get("stok") ?? "1").trim();
   const stok = Number(nilaiStok);
 
-  if (
-    nilaiStok === "" ||
-    !Number.isInteger(stok) ||
-    stok < 0
-  ) {
+  if (nilaiStok === "" || !Number.isInteger(stok) || stok < 0) {
     return null;
   }
 
   return stok;
+}
+
+function ambilHargaDiskon(formData, harga) {
+  const nilaiDiskon = String(formData.get("harga_diskon") ?? "").trim();
+
+  if (nilaiDiskon === "") {
+    return null;
+  }
+
+  const hargaDiskon = Number(nilaiDiskon);
+
+  if (
+    !Number.isSafeInteger(hargaDiskon) ||
+    hargaDiskon <= 0 ||
+    hargaDiskon >= harga
+  ) {
+    return undefined;
+  }
+
+  return hargaDiskon;
+}
+
+function ambilBadge(formData) {
+  const badge = String(formData.get("badge") || "").trim();
+
+  if (!badge) return null;
+
+  if (!["Baru", "Terlaris"].includes(badge)) {
+    return undefined;
+  }
+
+  return badge;
 }
 
 export async function loginAdmin(formData) {
@@ -121,12 +149,14 @@ export async function tambahProdukAdmin(formData) {
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
   const stok = ambilStok(formData);
+  const harga_diskon = ambilHargaDiskon(formData, harga);
+  const badge = ambilBadge(formData);
   const kategori = String(formData.get("kategori") || "").trim();
   const foto_url = String(formData.get("foto_url") || "").trim();
   const foto_galeri = ambilFotoGaleri(formData);
   const deskripsi = String(formData.get("deskripsi") || "").trim();
 
-  if (!nama || !Number.isFinite(harga) || harga < 0) {
+  if (!nama || !Number.isSafeInteger(harga) || harga < 0) {
     redirect("/admin/produk/baru?error=Data%20produk%20tidak%20valid");
   }
 
@@ -134,9 +164,19 @@ export async function tambahProdukAdmin(formData) {
     redirect("/admin/produk/baru?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200");
   }
 
+  if (harga_diskon === undefined) {
+    redirect("/admin/produk/baru?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal");
+  }
+
+  if (badge === undefined) {
+    redirect("/admin/produk/baru?error=Pilihan%20badge%20tidak%20valid");
+  }
+
   const { error } = await supabase.from("produk").insert({
     nama,
     harga,
+    harga_diskon,
+    badge,
     stok,
     kategori,
     foto_url,
@@ -162,8 +202,10 @@ export async function updateProdukAdmin(id, formData) {
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
   const stok = ambilStok(formData);
+  const harga_diskon = ambilHargaDiskon(formData, harga);
+  const badge = ambilBadge(formData);
 
-  if (!nama || !Number.isFinite(harga) || harga < 0) {
+  if (!nama || !Number.isSafeInteger(harga) || harga < 0) {
     redirect(`/admin/produk/${id}/ubah?error=Data%20produk%20tidak%20valid`);
   }
 
@@ -171,11 +213,21 @@ export async function updateProdukAdmin(id, formData) {
     redirect(`/admin/produk/${id}/ubah?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200`);
   }
 
+  if (harga_diskon === undefined) {
+    redirect(`/admin/produk/${id}/ubah?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal`);
+  }
+
+  if (badge === undefined) {
+    redirect(`/admin/produk/${id}/ubah?error=Pilihan%20badge%20tidak%20valid`);
+  }
+
   const { error } = await supabase
     .from("produk")
     .update({
       nama,
       harga,
+      harga_diskon,
+      badge,
       stok,
       kategori: String(formData.get("kategori") || "").trim(),
       foto_url: String(formData.get("foto_url") || "").trim(),

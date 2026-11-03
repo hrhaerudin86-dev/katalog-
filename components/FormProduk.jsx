@@ -58,13 +58,44 @@ export default function FormProduk({
       />
 
       <Input
-        label="Harga (Rp)"
+        label="Harga normal (Rp)"
         name="harga"
         type="number"
         min="0"
         defaultValue={produk.harga}
         required
       />
+
+      <Input
+        label="Harga diskon (Rp)"
+        name="harga_diskon"
+        type="number"
+        min="0"
+        defaultValue={produk.harga_diskon ?? ""}
+        placeholder="Kosongkan jika tidak ada diskon"
+      />
+
+      <p className="text-xs text-teks-lembut">
+        Isi harga diskon jika produk sedang promo. Harga normal akan
+        ditampilkan sebagai harga coret.
+      </p>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="badge" className="text-sm font-medium">
+          Badge produk
+        </label>
+
+        <select
+          id="badge"
+          name="badge"
+          defaultValue={produk.badge || ""}
+          className="w-full rounded-lg border border-garis bg-latar px-4 py-3"
+        >
+          <option value="">Tidak ada badge</option>
+          <option value="Baru">Baru</option>
+          <option value="Terlaris">Terlaris</option>
+        </select>
+      </div>
 
       <Input
         label="Jumlah Stok"
