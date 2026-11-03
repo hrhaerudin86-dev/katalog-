@@ -1,4 +1,3 @@
-
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,10 +5,63 @@ import { toko } from "@/lib/toko";
 import { KeranjangProvider } from "@/components/KeranjangProvider";
 
 export const metadata = {
-  title: toko.nama,
-  description: toko.tagline,
+  metadataBase: new URL("https://katalog-bay-psi.vercel.app"),
+
+  title: {
+    default: `${toko.nama} | Katalog Produk UMKM`,
+    template: `%s | ${toko.nama}`,
+  },
+
+  description:
+    "SIRKULA adalah katalog produk UMKM kreatif yang mengubah limbah menjadi produk bernilai dan bermanfaat.",
+
   applicationName: "SIRKULA",
+
+  keywords: [
+    "SIRKULA",
+    "UMKM",
+    "katalog produk",
+    "produk daur ulang",
+    "kerajinan limbah",
+    "produk ramah lingkungan",
+  ],
+
+  authors: [{ name: "SIRKULA" }],
+  creator: "SIRKULA",
+  publisher: "SIRKULA",
+
+  alternates: {
+    canonical: "/",
+  },
+
+  openGraph: {
+    title: `${toko.nama} | Katalog Produk UMKM`,
+    description:
+      "Dari Limbah Menjadi Berkah. Temukan produk kreatif dan ramah lingkungan dari SIRKULA.",
+    url: "https://katalog-bay-psi.vercel.app",
+    siteName: "SIRKULA",
+    locale: "id_ID",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary",
+    title: `${toko.nama} | Katalog Produk UMKM`,
+    description:
+      "Dari Limbah Menjadi Berkah. Temukan produk kreatif SIRKULA.",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+
   manifest: "/manifest.webmanifest",
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
