@@ -59,7 +59,9 @@ export default async function HalamanAdmin({ searchParams }) {
     .select("id, kategori");
 
   if (errorRingkasan) {
-    throw new Error(`Gagal mengambil ringkasan produk: ${errorRingkasan.message}`);
+    throw new Error(
+      `Gagal mengambil ringkasan produk: ${errorRingkasan.message}`
+    );
   }
 
   const produk = semuaProduk ?? [];
@@ -108,7 +110,7 @@ export default async function HalamanAdmin({ searchParams }) {
     Math.max(1, totalHalaman)
   );
 
-  // Jika nomor halaman melebihi jumlah halaman, arahkan ke halaman terakhir
+  // Jika nomor halaman melebihi jumlah halaman
   if (nomorHalaman > Math.max(1, totalHalaman)) {
     const paramsBaru = new URLSearchParams();
 
@@ -139,14 +141,24 @@ export default async function HalamanAdmin({ searchParams }) {
           <h1 className="text-2xl font-extrabold">
             Dashboard Admin
           </h1>
+
           <p className="mt-1 text-sm text-teks-lembut">
             Ringkasan kondisi katalog produk SIRKULA.
           </p>
         </div>
 
-        <Tombol href="/admin/produk/baru">
-          Tambah produk
-        </Tombol>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href="/api/admin/produk/export"
+            className="rounded-xl border border-garis px-5 py-3 text-center font-semibold hover:bg-permukaan"
+          >
+            ↓ Ekspor CSV
+          </a>
+
+          <Tombol href="/admin/produk/baru">
+            Tambah produk
+          </Tombol>
+        </div>
       </div>
 
       {/* Ringkasan jumlah produk */}
@@ -155,9 +167,11 @@ export default async function HalamanAdmin({ searchParams }) {
           <p className="text-sm text-teks-lembut">
             Total Produk
           </p>
+
           <p className="mt-3 text-4xl font-extrabold text-utama">
             {produk.length}
           </p>
+
           <p className="mt-2 text-sm text-teks-lembut">
             Produk terdaftar di katalog
           </p>
@@ -167,9 +181,11 @@ export default async function HalamanAdmin({ searchParams }) {
           <p className="text-sm text-teks-lembut">
             Total Kategori
           </p>
+
           <p className="mt-3 text-4xl font-extrabold text-utama">
             {daftarKategori.length}
           </p>
+
           <p className="mt-2 text-sm text-teks-lembut">
             Kategori produk yang tersedia
           </p>
