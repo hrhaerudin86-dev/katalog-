@@ -6,6 +6,7 @@ import TombolTambahKeranjang from "@/components/TombolTambahKeranjang";
 import TombolBagikan from "@/components/TombolBagikan";
 import KartuProduk from "@/components/KartuProduk";
 import GaleriProduk from "@/components/GaleriProduk";
+import CatatProdukDilihat from "@/components/CatatProdukDilihat";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatRupiah } from "@/lib/format";
 
@@ -59,6 +60,8 @@ export default async function HalamanDetailProduk({ params }) {
 
   return (
     <>
+      <CatatProdukDilihat produkId={produk.id} />
+
       <article className="grid gap-8 py-8 md:grid-cols-2 md:py-12">
         <div className="flex flex-col gap-3">
           {badgeValid && (
