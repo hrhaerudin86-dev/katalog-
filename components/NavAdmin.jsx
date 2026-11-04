@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions";
 
@@ -6,10 +5,20 @@ export default function NavAdmin() {
   return (
     <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-garis pb-4 text-sm">
       <Link href="/admin" className="font-semibold hover:text-utama">
-        Produk
+        Dashboard & Produk
       </Link>
 
-      <Link href="/admin/password" className="font-semibold hover:text-utama">
+      <Link
+        href="/admin/kategori"
+        className="font-semibold hover:text-utama"
+      >
+        Kelola Kategori
+      </Link>
+
+      <Link
+        href="/admin/password"
+        className="font-semibold hover:text-utama"
+      >
         Ganti password
       </Link>
 

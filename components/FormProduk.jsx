@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,6 +10,7 @@ export default function FormProduk({
   produk = {},
   labelTombol,
   action,
+  daftarKategori = [],
 }) {
   const [nama, setNama] = useState(produk.nama || "");
   const [kategori, setKategori] = useState(produk.kategori || "");
@@ -112,12 +114,34 @@ export default function FormProduk({
         Masukkan jumlah stok produk. Jika stok 0, produk akan dianggap habis.
       </p>
 
-      <Input
-        label="Kategori"
-        name="kategori"
-        value={kategori}
-        onChange={(e) => setKategori(e.target.value)}
-      />
+      <div className="flex flex-col gap-2">
+        <label htmlFor="kategori" className="text-sm font-medium">
+          Kategori
+        </label>
+
+        <select
+          id="kategori"
+          name="kategori"
+          value={kategori}
+          onChange={(e) => setKategori(e.target.value)}
+          required
+          className="w-full rounded-lg border border-garis bg-latar px-4 py-3"
+        >
+          <option value="">Pilih kategori produk</option>
+
+          {daftarKategori.map((item) => (
+            <option key={item.id} value={item.nama}>
+              {item.nama}
+            </option>
+          ))}
+        </select>
+
+        {daftarKategori.length === 0 && (
+          <p className="text-xs text-red-600">
+            Belum ada kategori. Tambahkan kategori terlebih dahulu.
+          </p>
+        )}
+      </div>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="foto_utama" className="text-sm font-medium">

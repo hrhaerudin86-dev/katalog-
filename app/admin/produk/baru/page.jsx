@@ -1,10 +1,59 @@
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
 import NavAdmin from "@/components/NavAdmin";
 import FormProduk from "@/components/FormProduk";
 import { tambahProdukAdmin } from "@/app/admin/actions";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function HalamanTambahProduk({ searchParams }) {
   const params = await searchParams;
+
+  // Periksa login admin
+  const cookieStore = await cookies();
+
+  const supabaseAuth = createServerClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabaseAuth.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/admin/login");
+  }
+
+  // Ambil kategori dari database
+  const supabase = createSupabaseServerClient();
+
+  const { data: daftarKategori, error } = await supabase
+    .from("kategori")
+    .select("id, nama")
+    .order("nama", { ascending: true });
+
+  if (error) {
+    throw new Error(`Gagal mengambil kategori: ${error.message}`);
+  }
 
   return (
     <div className="flex flex-col gap-6 py-8">
@@ -21,6 +70,7 @@ export default async function HalamanTambahProduk({ searchParams }) {
       <FormProduk
         labelTombol="Simpan produk"
         action={tambahProdukAdmin}
+        daftarKategori={daftarKategori ?? []}
       />
     </div>
   );
