@@ -11,15 +11,32 @@ export default function FormProduk({
   labelTombol,
   action,
   daftarKategori = [],
+  formValues = {},
+  formErrors = {},
 }) {
-  const [nama, setNama] = useState(produk.nama || "");
-  const [kategori, setKategori] = useState(produk.kategori || "");
-  const [deskripsi, setDeskripsi] = useState(produk.deskripsi || "");
-  const [fotoGaleri, setFotoGaleri] = useState(
-    Array.isArray(produk.foto_galeri)
-      ? produk.foto_galeri.join("\n")
-      : ""
+  const [nama, setNama] = useState(
+    formValues.nama ?? produk.nama ?? ""
   );
+
+  const [harga, setHarga] = useState(
+    formValues.harga ?? produk.harga ?? ""
+  );
+
+  const [kategori, setKategori] = useState(
+    formValues.kategori ?? produk.kategori ?? ""
+  );
+
+  const [deskripsi, setDeskripsi] = useState(
+    formValues.deskripsi ?? produk.deskripsi ?? ""
+  );
+
+  const [fotoGaleri, setFotoGaleri] = useState(
+    formValues.foto_galeri ??
+      (Array.isArray(produk.foto_galeri)
+        ? produk.foto_galeri.join("\n")
+        : "")
+  );
+
   const [memuatAI, setMemuatAI] = useState(false);
   const [pesanAI, setPesanAI] = useState("");
   const [fotoUtamaDipilih, setFotoUtamaDipilih] = useState(false);
@@ -52,30 +69,50 @@ export default function FormProduk({
   }
 
   return (
-    <form action={action} className="flex max-w-xl flex-col gap-4">
-      <Input
-        label="Nama produk"
-        name="nama"
-        value={nama}
-        onChange={(e) => setNama(e.target.value)}
-        required
-      />
+    <form
+      action={action}
+      noValidate
+      className="flex max-w-xl flex-col gap-4"
+    >
+      <div className="flex flex-col gap-1">
+        <Input
+          label="Nama produk"
+          name="nama"
+          value={nama}
+          onChange={(e) => setNama(e.target.value)}
+        />
 
-      <Input
-        label="Harga normal (Rp)"
-        name="harga"
-        type="number"
-        min="0"
-        defaultValue={produk.harga}
-        required
-      />
+        {formErrors.nama && (
+          <p className="text-sm text-red-600" role="alert">
+            {formErrors.nama}
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Input
+          label="Harga normal (Rp)"
+          name="harga"
+          type="number"
+          value={harga}
+          onChange={(e) => setHarga(e.target.value)}
+        />
+
+        {formErrors.harga && (
+          <p className="text-sm text-red-600" role="alert">
+            {formErrors.harga}
+          </p>
+        )}
+      </div>
 
       <Input
         label="Harga diskon (Rp)"
         name="harga_diskon"
         type="number"
         min="0"
-        defaultValue={produk.harga_diskon ?? ""}
+        defaultValue={
+          formValues.harga_diskon ?? produk.harga_diskon ?? ""
+        }
         placeholder="Kosongkan jika tidak ada diskon"
       />
 
@@ -88,10 +125,11 @@ export default function FormProduk({
         <label htmlFor="badge" className="text-sm font-medium">
           Badge produk
         </label>
+
         <select
           id="badge"
           name="badge"
-          defaultValue={produk.badge || ""}
+          defaultValue={formValues.badge ?? produk.badge ?? ""}
           className="w-full rounded-lg border border-garis bg-latar px-4 py-3"
         >
           <option value="">Tidak ada badge</option>
@@ -106,8 +144,7 @@ export default function FormProduk({
         type="number"
         min="0"
         step="1"
-        defaultValue={produk.stok ?? 1}
-        required
+        defaultValue={formValues.stok ?? produk.stok ?? 1}
       />
 
       <p className="text-xs text-teks-lembut">
@@ -124,7 +161,6 @@ export default function FormProduk({
           name="kategori"
           value={kategori}
           onChange={(e) => setKategori(e.target.value)}
-          required
           className="w-full rounded-lg border border-garis bg-latar px-4 py-3"
         >
           <option value="">Pilih kategori produk</option>
@@ -147,6 +183,7 @@ export default function FormProduk({
         <label htmlFor="foto_utama" className="text-sm font-medium">
           Upload foto utama
         </label>
+
         <input
           id="foto_utama"
           name="foto_utama"
@@ -157,6 +194,7 @@ export default function FormProduk({
           }}
           className="w-full rounded-lg border border-garis bg-latar p-3 text-sm"
         />
+
         <p className="text-xs text-teks-lembut">
           Format JPG, PNG, WebP. Maksimal 5 MB.
         </p>
@@ -166,7 +204,7 @@ export default function FormProduk({
         label="Atau link foto utama"
         name="foto_url"
         placeholder="https://..."
-        defaultValue={produk.foto_url}
+        defaultValue={formValues.foto_url ?? produk.foto_url ?? ""}
         disabled={fotoUtamaDipilih}
       />
 
@@ -174,6 +212,7 @@ export default function FormProduk({
         <label htmlFor="foto_galeri_file" className="text-sm font-medium">
           Upload foto galeri
         </label>
+
         <input
           id="foto_galeri_file"
           name="foto_galeri_file"
@@ -185,6 +224,7 @@ export default function FormProduk({
           }}
           className="w-full rounded-lg border border-garis bg-latar p-3 text-sm"
         />
+
         <p className="text-xs text-teks-lembut">
           Pilih maksimal 10 foto sekaligus. Setiap foto maksimal 5 MB.
         </p>
@@ -234,6 +274,7 @@ export default function FormProduk({
 
       <div className="flex gap-3">
         <Tombol type="submit">{labelTombol}</Tombol>
+
         <Tombol href="/admin" varian="garis">
           Batal
         </Tombol>

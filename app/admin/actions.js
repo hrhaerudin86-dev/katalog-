@@ -162,6 +162,30 @@ function ambilBadge(formData) {
   return badge;
 }
 
+// Menyimpan nilai form ketika validasi gagal
+function buatUrlErrorForm(path, formData, errorNama, errorHarga) {
+  const params = new URLSearchParams();
+
+  params.set("errorNama", errorNama || "");
+  params.set("errorHarga", errorHarga || "");
+
+  for (const field of [
+    "nama",
+    "harga",
+    "harga_diskon",
+    "badge",
+    "stok",
+    "kategori",
+    "foto_url",
+    "foto_galeri",
+    "deskripsi",
+  ]) {
+    params.set(field, String(formData.get(field) || ""));
+  }
+
+  return `${path}?${params.toString()}`;
+}
+
 export async function loginAdmin(formData) {
   const email = formData.get("email");
   const password = formData.get("password");
@@ -229,15 +253,31 @@ export async function tambahProdukAdmin(formData) {
   if (userError || !user) redirect("/admin/login");
 
   const nama = String(formData.get("nama") || "").trim();
-  const harga = Number(formData.get("harga"));
+  const nilaiHarga = String(formData.get("harga") ?? "").trim();
+  const harga = Number(nilaiHarga);
   const stok = ambilStok(formData);
   const harga_diskon = ambilHargaDiskon(formData, harga);
   const badge = ambilBadge(formData);
   const kategori = String(formData.get("kategori") || "").trim();
   const deskripsi = String(formData.get("deskripsi") || "").trim();
 
-  if (!nama || !Number.isSafeInteger(harga) || harga < 0) {
-    redirect("/admin/produk/baru?error=Data%20produk%20tidak%20valid");
+  const errorNama = !nama ? "Nama produk wajib diisi." : "";
+  const errorHarga =
+    nilaiHarga === "" ||
+    !Number.isSafeInteger(harga) ||
+    harga <= 0
+      ? "Harga harus berupa angka positif."
+      : "";
+
+  if (errorNama || errorHarga) {
+    redirect(
+      buatUrlErrorForm(
+        "/admin/produk/baru",
+        formData,
+        errorNama,
+        errorHarga
+      )
+    );
   }
 
   if (stok === null) {
@@ -289,13 +329,29 @@ export async function updateProdukAdmin(id, formData) {
   if (userError || !user) redirect("/admin/login");
 
   const nama = String(formData.get("nama") || "").trim();
-  const harga = Number(formData.get("harga"));
+  const nilaiHarga = String(formData.get("harga") ?? "").trim();
+  const harga = Number(nilaiHarga);
   const stok = ambilStok(formData);
   const harga_diskon = ambilHargaDiskon(formData, harga);
   const badge = ambilBadge(formData);
 
-  if (!nama || !Number.isSafeInteger(harga) || harga < 0) {
-    redirect(`/admin/produk/${id}/ubah?error=Data%20produk%20tidak%20valid`);
+  const errorNama = !nama ? "Nama produk wajib diisi." : "";
+  const errorHarga =
+    nilaiHarga === "" ||
+    !Number.isSafeInteger(harga) ||
+    harga <= 0
+      ? "Harga harus berupa angka positif."
+      : "";
+
+  if (errorNama || errorHarga) {
+    redirect(
+      buatUrlErrorForm(
+        `/admin/produk/${id}/ubah`,
+        formData,
+        errorNama,
+        errorHarga
+      )
+    );
   }
 
   if (stok === null) {

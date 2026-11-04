@@ -55,6 +55,25 @@ export default async function HalamanTambahProduk({ searchParams }) {
     throw new Error(`Gagal mengambil kategori: ${error.message}`);
   }
 
+  // Ambil kembali nilai form setelah validasi gagal
+  const formValues = {
+    nama: params?.nama ?? "",
+    harga: params?.harga ?? "",
+    harga_diskon: params?.harga_diskon ?? "",
+    badge: params?.badge ?? "",
+    stok: params?.stok ?? "1",
+    kategori: params?.kategori ?? "",
+    foto_url: params?.foto_url ?? "",
+    foto_galeri: params?.foto_galeri ?? "",
+    deskripsi: params?.deskripsi ?? "",
+  };
+
+  // Ambil pesan error per kolom
+  const formErrors = {
+    nama: params?.errorNama ?? "",
+    harga: params?.errorHarga ?? "",
+  };
+
   return (
     <div className="flex flex-col gap-6 py-8">
       <NavAdmin />
@@ -71,6 +90,8 @@ export default async function HalamanTambahProduk({ searchParams }) {
         labelTombol="Simpan produk"
         action={tambahProdukAdmin}
         daftarKategori={daftarKategori ?? []}
+        formValues={formValues}
+        formErrors={formErrors}
       />
     </div>
   );

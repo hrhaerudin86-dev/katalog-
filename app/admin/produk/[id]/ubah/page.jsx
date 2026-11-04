@@ -11,8 +11,12 @@ import FormProduk from "@/components/FormProduk";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { updateProdukAdmin } from "@/app/admin/actions";
 
-export default async function HalamanUbahProduk({ params }) {
+export default async function HalamanUbahProduk({
+  params,
+  searchParams,
+}) {
   const { id } = await params;
+  const query = await searchParams;
 
   // Periksa login admin
   const cookieStore = await cookies();
@@ -76,6 +80,29 @@ export default async function HalamanUbahProduk({ params }) {
 
   const simpanPerubahan = updateProdukAdmin.bind(null, id);
 
+  // Nilai dari URL diprioritaskan jika validasi sebelumnya gagal
+  const formValues = {
+    nama: query?.nama ?? produk.nama ?? "",
+    harga: query?.harga ?? produk.harga ?? "",
+    harga_diskon: query?.harga_diskon ?? produk.harga_diskon ?? "",
+    badge: query?.badge ?? produk.badge ?? "",
+    stok: query?.stok ?? produk.stok ?? 1,
+    kategori: query?.kategori ?? produk.kategori ?? "",
+    foto_url: query?.foto_url ?? produk.foto_url ?? "",
+    foto_galeri:
+      query?.foto_galeri ??
+      (Array.isArray(produk.foto_galeri)
+        ? produk.foto_galeri.join("\n")
+        : ""),
+    deskripsi: query?.deskripsi ?? produk.deskripsi ?? "",
+  };
+
+  // Pesan error per kolom
+  const formErrors = {
+    nama: query?.errorNama ?? "",
+    harga: query?.errorHarga ?? "",
+  };
+
   return (
     <div className="flex flex-col gap-6 py-8">
       <NavAdmin />
@@ -84,11 +111,19 @@ export default async function HalamanUbahProduk({ params }) {
         Ubah produk
       </h1>
 
+      {query?.error && (
+        <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+          Gagal menyimpan perubahan: {query.error}
+        </p>
+      )}
+
       <FormProduk
         produk={produk}
         daftarKategori={daftarKategori ?? []}
         labelTombol="Simpan perubahan"
         action={simpanPerubahan}
+        formValues={formValues}
+        formErrors={formErrors}
       />
     </div>
   );
