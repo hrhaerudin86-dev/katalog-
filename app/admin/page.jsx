@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+import Link from "next/link";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -11,7 +12,9 @@ import TabelProduk from "@/components/TabelProduk";
 import Tombol from "@/components/Tombol";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function HalamanAdmin() {
+const PRODUK_PER_HALAMAN = 10;
+
+export default async function HalamanAdmin({ searchParams }) {
   // Periksa sesi login admin
   const cookieStore = await cookies();
 
@@ -41,21 +44,26 @@ export default async function HalamanAdmin() {
     redirect("/admin/login");
   }
 
-  // Ambil data produk dari database
+  const params = await searchParams;
+  const kataKunci = String(params?.q || "").trim();
+  const nomorHalaman = Math.max(
+    1,
+    Number.parseInt(params?.page || "1", 10) || 1
+  );
+
   const supabase = createSupabaseServerClient();
 
-  const { data: daftarProduk, error } = await supabase
+  // Ambil ringkasan seluruh produk
+  const { data: semuaProduk, error: errorRingkasan } = await supabase
     .from("produk")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("id, kategori");
 
-  if (error) {
-    throw new Error(`Gagal mengambil produk: ${error.message}`);
+  if (errorRingkasan) {
+    throw new Error(`Gagal mengambil ringkasan produk: ${errorRingkasan.message}`);
   }
 
-  const produk = daftarProduk ?? [];
+  const produk = semuaProduk ?? [];
 
-  // Hitung jumlah produk berdasarkan kategori
   const ringkasanKategori = produk.reduce((hasil, item) => {
     const kategori = item.kategori?.trim() || "Tanpa kategori";
 
@@ -67,6 +75,60 @@ export default async function HalamanAdmin() {
   const daftarKategori = Object.entries(ringkasanKategori).sort(
     (a, b) => b[1] - a[1]
   );
+
+  // Query pencarian dan pagination langsung dari database
+  const posisiAwal = (nomorHalaman - 1) * PRODUK_PER_HALAMAN;
+  const posisiAkhir = posisiAwal + PRODUK_PER_HALAMAN - 1;
+
+  let queryProduk = supabase
+    .from("produk")
+    .select("*", { count: "exact" });
+
+  if (kataKunci) {
+    const kataAman = kataKunci.replace(/[,%()]/g, " ");
+    queryProduk = queryProduk.ilike("nama", `%${kataAman}%`);
+  }
+
+  const {
+    data: daftarProduk,
+    count,
+    error,
+  } = await queryProduk
+    .order("created_at", { ascending: false })
+    .range(posisiAwal, posisiAkhir);
+
+  if (error) {
+    throw new Error(`Gagal mengambil produk: ${error.message}`);
+  }
+
+  const totalProduk = count ?? 0;
+  const totalHalaman = Math.ceil(totalProduk / PRODUK_PER_HALAMAN);
+  const halamanAktif = Math.min(
+    nomorHalaman,
+    Math.max(1, totalHalaman)
+  );
+
+  // Jika nomor halaman melebihi jumlah halaman, arahkan ke halaman terakhir
+  if (nomorHalaman > Math.max(1, totalHalaman)) {
+    const paramsBaru = new URLSearchParams();
+
+    if (kataKunci) paramsBaru.set("q", kataKunci);
+    paramsBaru.set("page", String(halamanAktif));
+
+    redirect(`/admin?${paramsBaru.toString()}`);
+  }
+
+  function buatUrlHalaman(halaman) {
+    const urlParams = new URLSearchParams();
+
+    if (kataKunci) {
+      urlParams.set("q", kataKunci);
+    }
+
+    urlParams.set("page", String(halaman));
+
+    return `/admin?${urlParams.toString()}`;
+  }
 
   return (
     <div className="flex flex-col gap-6 py-8">
@@ -144,13 +206,93 @@ export default async function HalamanAdmin() {
         )}
       </section>
 
-      {/* Tabel pengelolaan produk */}
+      {/* Pencarian dan pengelolaan produk */}
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-bold">
           Kelola Produk
         </h2>
 
-        <TabelProduk daftarProduk={produk} />
+        <form
+          action="/admin"
+          method="GET"
+          className="flex flex-col gap-3 sm:flex-row"
+        >
+          <input
+            type="search"
+            name="q"
+            defaultValue={kataKunci}
+            placeholder="Cari nama produk..."
+            className="w-full rounded-xl border border-garis bg-latar px-4 py-3 outline-none focus:border-utama"
+          />
+
+          <button
+            type="submit"
+            className="rounded-xl bg-utama px-6 py-3 font-semibold text-white"
+          >
+            Cari
+          </button>
+
+          {kataKunci && (
+            <Link
+              href="/admin"
+              className="rounded-xl border border-garis px-6 py-3 text-center font-semibold"
+            >
+              Reset
+            </Link>
+          )}
+        </form>
+
+        <p className="text-sm text-teks-lembut">
+          {totalProduk} produk ditemukan
+          {kataKunci ? ` untuk "${kataKunci}"` : ""}.
+        </p>
+
+        {daftarProduk && daftarProduk.length > 0 ? (
+          <>
+            <TabelProduk daftarProduk={daftarProduk} />
+
+            {/* Navigasi halaman */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-teks-lembut">
+                Halaman {halamanAktif} dari {Math.max(1, totalHalaman)}
+              </p>
+
+              <div className="flex items-center gap-2">
+                {halamanAktif > 1 ? (
+                  <Link
+                    href={buatUrlHalaman(halamanAktif - 1)}
+                    className="rounded-lg border border-garis px-4 py-2 hover:bg-permukaan"
+                  >
+                    Sebelumnya
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-garis px-4 py-2 opacity-40">
+                    Sebelumnya
+                  </span>
+                )}
+
+                {halamanAktif < totalHalaman ? (
+                  <Link
+                    href={buatUrlHalaman(halamanAktif + 1)}
+                    className="rounded-lg border border-garis px-4 py-2 hover:bg-permukaan"
+                  >
+                    Berikutnya
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-garis px-4 py-2 opacity-40">
+                    Berikutnya
+                  </span>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="rounded-xl border border-garis p-5 text-sm text-teks-lembut">
+            {kataKunci
+              ? "Produk yang kamu cari tidak ditemukan."
+              : "Belum ada produk dalam katalog."}
+          </p>
+        )}
       </section>
     </div>
   );
