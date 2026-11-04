@@ -36,6 +36,7 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
     .from("ulasan_produk")
     .select("id, nama_pengulas, rating, komentar, created_at")
     .eq("produk_id", id)
+    .eq("status", "approved")
     .order("created_at", { ascending: false });
 
   if (errorUlasan) {
@@ -139,13 +140,13 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
           </p>
         </div>
 
-        {query.ulasan === "berhasil" && (
+        {query.ulasan === "menunggu" && (
           <p className="rounded-xl bg-green-100 p-3 text-green-800">
-            Ulasan berhasil dikirim. Terima kasih!
+            Ulasan berhasil dikirim dan sedang menunggu persetujuan admin.
           </p>
         )}
 
-        {query.ulasan && query.ulasan !== "berhasil" && (
+        {query.ulasan && query.ulasan !== "menunggu" && (
           <p className="rounded-xl bg-red-100 p-3 text-red-800">
             Ulasan gagal dikirim. Periksa nama, rating, komentar, lalu coba lagi.
           </p>

@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions";
 
@@ -13,6 +14,13 @@ export default function NavAdmin() {
         className="font-semibold hover:text-utama"
       >
         Kelola Kategori
+      </Link>
+
+      <Link
+        href="/admin/ulasan"
+        className="font-semibold hover:text-utama"
+      >
+        Moderasi Ulasan
       </Link>
 
       <Link

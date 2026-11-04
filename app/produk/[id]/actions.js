@@ -24,14 +24,13 @@ export async function kirimUlasan(produkId, formData) {
 
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase
-    .from("ulasan_produk")
-    .insert({
-      produk_id: produkId,
-      nama_pengulas: nama,
-      rating,
-      komentar,
-    });
+  const { error } = await supabase.from("ulasan_produk").insert({
+    produk_id: produkId,
+    nama_pengulas: nama,
+    rating,
+    komentar,
+    status: "pending",
+  });
 
   if (error) {
     console.error("Gagal menyimpan ulasan:", error);
@@ -39,5 +38,5 @@ export async function kirimUlasan(produkId, formData) {
   }
 
   revalidatePath(`/produk/${produkId}`);
-  redirect(`/produk/${produkId}?ulasan=berhasil`);
+  redirect(`/produk/${produkId}?ulasan=menunggu`);
 }
