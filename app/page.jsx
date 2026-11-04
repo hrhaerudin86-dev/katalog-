@@ -18,6 +18,7 @@ export default async function HalamanKatalog() {
       .select(
         "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
       )
+      .eq("aktif", true)
       .order("created_at", { ascending: false });
 
     if (error) {

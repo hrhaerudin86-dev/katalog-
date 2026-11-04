@@ -18,6 +18,7 @@ export default async function HalamanDetailProduk({ params }) {
     .from("produk")
     .select("*")
     .eq("id", id)
+    .eq("aktif", true)
     .maybeSingle();
 
   if (error) {
@@ -48,6 +49,7 @@ export default async function HalamanDetailProduk({ params }) {
         "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
       )
       .eq("kategori", produk.kategori)
+      .eq("aktif", true)
       .neq("id", id)
       .order("created_at", { ascending: false })
       .limit(4);
@@ -109,9 +111,7 @@ export default async function HalamanDetailProduk({ params }) {
           </p>
 
           <TombolTambahKeranjang produk={produk} />
-
           <TombolWhatsApp produk={produk} />
-
           <TombolBagikan namaProduk={produk.nama} />
         </div>
       </article>

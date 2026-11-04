@@ -1,8 +1,10 @@
-﻿"use server";
+﻿
+"use server";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const BUCKET_FOTO = "produk";
@@ -362,4 +364,50 @@ export async function hapusProdukAdmin(id) {
   }
 
   redirect("/admin");
+}
+
+export async function toggleStatusProduk(formData) {
+  const supabaseAuth = await createSupabaseAuthClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseAuth.auth.getUser();
+
+  if (userError || !user) {
+    redirect("/admin/login");
+  }
+
+  const id = Number(formData.get("id"));
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    redirect("/admin?error=ID%20produk%20tidak%20valid");
+  }
+
+  const supabase = createSupabaseServerClient();
+
+  const { data: produk, error: cekError } = await supabase
+    .from("produk")
+    .select("id, aktif")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (cekError || !produk) {
+    redirect("/admin?error=Produk%20tidak%20ditemukan");
+  }
+
+  const { error } = await supabase
+    .from("produk")
+    .update({ aktif: !produk.aktif })
+    .eq("id", id);
+
+  if (error) {
+    redirect(`/admin?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath(`/produk/${id}`);
+
+  redirect("/admin?success=Status%20produk%20berhasil%20diubah");
 }
