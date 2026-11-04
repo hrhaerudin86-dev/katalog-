@@ -20,6 +20,8 @@ export default function FormProduk({
   );
   const [memuatAI, setMemuatAI] = useState(false);
   const [pesanAI, setPesanAI] = useState("");
+  const [fotoUtamaDipilih, setFotoUtamaDipilih] = useState(false);
+  const [fotoGaleriDipilih, setFotoGaleriDipilih] = useState(false);
 
   async function buatDeskripsi() {
     if (!nama.trim() || !kategori.trim()) {
@@ -84,7 +86,6 @@ export default function FormProduk({
         <label htmlFor="badge" className="text-sm font-medium">
           Badge produk
         </label>
-
         <select
           id="badge"
           name="badge"
@@ -118,25 +119,66 @@ export default function FormProduk({
         onChange={(e) => setKategori(e.target.value)}
       />
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="foto_utama" className="text-sm font-medium">
+          Upload foto utama
+        </label>
+        <input
+          id="foto_utama"
+          name="foto_utama"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => {
+            setFotoUtamaDipilih(Boolean(e.target.files?.length));
+          }}
+          className="w-full rounded-lg border border-garis bg-latar p-3 text-sm"
+        />
+        <p className="text-xs text-teks-lembut">
+          Format JPG, PNG, WebP. Maksimal 5 MB.
+        </p>
+      </div>
+
       <Input
-        label="Link foto utama"
+        label="Atau link foto utama"
         name="foto_url"
         placeholder="https://..."
         defaultValue={produk.foto_url}
+        disabled={fotoUtamaDipilih}
       />
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="foto_galeri_file" className="text-sm font-medium">
+          Upload foto galeri
+        </label>
+        <input
+          id="foto_galeri_file"
+          name="foto_galeri_file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          onChange={(e) => {
+            setFotoGaleriDipilih(Boolean(e.target.files?.length));
+          }}
+          className="w-full rounded-lg border border-garis bg-latar p-3 text-sm"
+        />
+        <p className="text-xs text-teks-lembut">
+          Pilih maksimal 10 foto sekaligus. Setiap foto maksimal 5 MB.
+        </p>
+      </div>
+
       <Input
-        label="Link foto galeri (maksimal 10 URL)"
+        label="Atau link foto galeri (maksimal 10 URL)"
         name="foto_galeri"
         textarea
         value={fotoGaleri}
         onChange={(e) => setFotoGaleri(e.target.value)}
         placeholder={"Masukkan satu URL per baris:\nhttps://contoh.com/foto1.jpg\nhttps://contoh.com/foto2.jpg"}
+        disabled={fotoGaleriDipilih}
       />
 
       <p className="text-xs text-teks-lembut">
-        Foto utama tetap digunakan sebagai foto pertama. Masukkan URL foto
-        tambahan satu per baris, maksimal 10 foto.
+        Gunakan upload file atau link URL untuk masing-masing bagian foto,
+        jangan keduanya sekaligus.
       </p>
 
       <div className="flex flex-col gap-2">

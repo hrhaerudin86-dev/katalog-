@@ -3,6 +3,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const BUCKET_FOTO = "produk";
+const MAKSIMAL_UKURAN = 5 * 1024 * 1024;
+
+const TIPE_FOTO = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 async function createSupabaseAuthClient() {
   const cookieStore = await cookies();
@@ -25,12 +35,91 @@ async function createSupabaseAuthClient() {
   );
 }
 
-function ambilFotoGaleri(formData) {
-  return String(formData.get("foto_galeri") || "")
+async function uploadFoto(file) {
+  if (!file || file.size === 0) {
+    return { url: null, error: null };
+  }
+
+  if (!TIPE_FOTO[file.type]) {
+    return {
+      url: null,
+      error: "Format foto harus JPG, PNG, atau WebP.",
+    };
+  }
+
+  if (file.size > MAKSIMAL_UKURAN) {
+    return {
+      url: null,
+      error: "Ukuran setiap foto maksimal 5 MB.",
+    };
+  }
+
+  const supabaseAdmin = createSupabaseServerClient();
+  const namaFile = `${crypto.randomUUID()}.${TIPE_FOTO[file.type]}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET_FOTO)
+    .upload(namaFile, file, {
+      contentType: file.type,
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    return { url: null, error: error.message };
+  }
+
+  const { data } = supabaseAdmin.storage
+    .from(BUCKET_FOTO)
+    .getPublicUrl(namaFile);
+
+  return { url: data.publicUrl, error: null };
+}
+
+async function prosesFoto(formData, fotoUtamaLama = "") {
+  let foto_url = String(formData.get("foto_url") || "").trim();
+  const fileUtama = formData.get("foto_utama");
+
+  if (fileUtama instanceof File && fileUtama.size > 0) {
+    const hasil = await uploadFoto(fileUtama);
+
+    if (hasil.error) {
+      return { error: hasil.error };
+    }
+
+    foto_url = hasil.url;
+  } else if (!foto_url) {
+    foto_url = fotoUtamaLama;
+  }
+
+  const foto_galeri = String(formData.get("foto_galeri") || "")
     .split(/\r?\n/)
     .map((url) => url.trim())
-    .filter(Boolean)
-    .slice(0, 10);
+    .filter(Boolean);
+
+  const fileGaleri = formData.getAll("foto_galeri_file");
+
+  for (const file of fileGaleri) {
+    if (!(file instanceof File) || file.size === 0) continue;
+
+    const hasil = await uploadFoto(file);
+
+    if (hasil.error) {
+      return { error: hasil.error };
+    }
+
+    foto_galeri.push(hasil.url);
+  }
+
+  if (foto_galeri.length > 10) {
+    return { error: "Jumlah foto galeri maksimal 10 gambar." };
+  }
+
+  return {
+    foto_url,
+    foto_galeri,
+    error: null,
+  };
 }
 
 function ambilStok(formData) {
@@ -47,9 +136,7 @@ function ambilStok(formData) {
 function ambilHargaDiskon(formData, harga) {
   const nilaiDiskon = String(formData.get("harga_diskon") ?? "").trim();
 
-  if (nilaiDiskon === "") {
-    return null;
-  }
+  if (nilaiDiskon === "") return null;
 
   const hargaDiskon = Number(nilaiDiskon);
 
@@ -68,10 +155,7 @@ function ambilBadge(formData) {
   const badge = String(formData.get("badge") || "").trim();
 
   if (!badge) return null;
-
-  if (!["Baru", "Terlaris"].includes(badge)) {
-    return undefined;
-  }
+  if (!["Baru", "Terlaris"].includes(badge)) return undefined;
 
   return badge;
 }
@@ -123,9 +207,7 @@ export async function gantiPasswordAdmin(formData) {
   const supabase = await createSupabaseAuthClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    redirect("/admin/login");
-  }
+  if (userError || !user) redirect("/admin/login");
 
   const { error } = await supabase.auth.updateUser({
     password: passwordBaru,
@@ -142,9 +224,7 @@ export async function tambahProdukAdmin(formData) {
   const supabase = await createSupabaseAuthClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    redirect("/admin/login");
-  }
+  if (userError || !user) redirect("/admin/login");
 
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
@@ -152,8 +232,6 @@ export async function tambahProdukAdmin(formData) {
   const harga_diskon = ambilHargaDiskon(formData, harga);
   const badge = ambilBadge(formData);
   const kategori = String(formData.get("kategori") || "").trim();
-  const foto_url = String(formData.get("foto_url") || "").trim();
-  const foto_galeri = ambilFotoGaleri(formData);
   const deskripsi = String(formData.get("deskripsi") || "").trim();
 
   if (!nama || !Number.isSafeInteger(harga) || harga < 0) {
@@ -172,6 +250,17 @@ export async function tambahProdukAdmin(formData) {
     redirect("/admin/produk/baru?error=Pilihan%20badge%20tidak%20valid");
   }
 
+  let foto;
+  try {
+    foto = await prosesFoto(formData);
+  } catch {
+    redirect("/admin/produk/baru?error=Gagal%20mengunggah%20foto");
+  }
+
+  if (foto.error) {
+    redirect(`/admin/produk/baru?error=${encodeURIComponent(foto.error)}`);
+  }
+
   const { error } = await supabase.from("produk").insert({
     nama,
     harga,
@@ -179,8 +268,8 @@ export async function tambahProdukAdmin(formData) {
     badge,
     stok,
     kategori,
-    foto_url,
-    foto_galeri,
+    foto_url: foto.foto_url || "",
+    foto_galeri: foto.foto_galeri,
     deskripsi,
   });
 
@@ -195,9 +284,7 @@ export async function updateProdukAdmin(id, formData) {
   const supabase = await createSupabaseAuthClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    redirect("/admin/login");
-  }
+  if (userError || !user) redirect("/admin/login");
 
   const nama = String(formData.get("nama") || "").trim();
   const harga = Number(formData.get("harga"));
@@ -221,6 +308,17 @@ export async function updateProdukAdmin(id, formData) {
     redirect(`/admin/produk/${id}/ubah?error=Pilihan%20badge%20tidak%20valid`);
   }
 
+  let foto;
+  try {
+    foto = await prosesFoto(formData);
+  } catch {
+    redirect(`/admin/produk/${id}/ubah?error=Gagal%20mengunggah%20foto`);
+  }
+
+  if (foto.error) {
+    redirect(`/admin/produk/${id}/ubah?error=${encodeURIComponent(foto.error)}`);
+  }
+
   const { error } = await supabase
     .from("produk")
     .update({
@@ -230,8 +328,8 @@ export async function updateProdukAdmin(id, formData) {
       badge,
       stok,
       kategori: String(formData.get("kategori") || "").trim(),
-      foto_url: String(formData.get("foto_url") || "").trim(),
-      foto_galeri: ambilFotoGaleri(formData),
+      foto_url: foto.foto_url || "",
+      foto_galeri: foto.foto_galeri,
       deskripsi: String(formData.get("deskripsi") || "").trim(),
     })
     .eq("id", id);
@@ -247,9 +345,7 @@ export async function hapusProdukAdmin(id) {
   const supabase = await createSupabaseAuthClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    redirect("/admin/login");
-  }
+  if (userError || !user) redirect("/admin/login");
 
   const { data, error } = await supabase
     .from("produk")
