@@ -1,8 +1,10 @@
+
 "use client";
 
 import { useState } from "react";
 import { toko } from "@/lib/toko";
 import { formatRupiah } from "@/lib/format";
+import { catatKlikWhatsApp } from "@/app/produk/klik-whatsapp";
 
 export default function TombolWhatsApp({ produk }) {
   const stok = Math.max(0, Math.floor(Number(produk.stok ?? 0)));
@@ -21,6 +23,12 @@ export default function TombolWhatsApp({ produk }) {
   ].join("\n");
 
   const linkWhatsApp = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;
+
+  function handleKlikWhatsApp() {
+    catatKlikWhatsApp(produk.id).catch((error) => {
+      console.error("Pencatatan klik WhatsApp gagal:", error);
+    });
+  }
 
   if (stokHabis) {
     return (
@@ -81,6 +89,7 @@ export default function TombolWhatsApp({ produk }) {
         href={linkWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleKlikWhatsApp}
         className="inline-flex w-full items-center justify-center rounded-lg bg-utama px-5 py-3 font-semibold text-white hover:bg-utama-gelap sm:w-auto"
       >
         Pesan via WhatsApp
