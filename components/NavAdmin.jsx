@@ -24,6 +24,13 @@ export default function NavAdmin() {
       </Link>
 
       <Link
+        href="/admin/banner"
+        className="font-semibold hover:text-utama"
+      >
+        Kelola Banner
+      </Link>
+
+      <Link
         href="/admin/password"
         className="font-semibold hover:text-utama"
       >
