@@ -56,7 +56,7 @@ export default async function HalamanAdmin({ searchParams }) {
   // Ambil ringkasan seluruh produk
   const { data: semuaProduk, error: errorRingkasan } = await supabase
     .from("produk")
-    .select("id, kategori");
+    .select("id, kategori, nama");
 
   if (errorRingkasan) {
     throw new Error(
@@ -77,6 +77,34 @@ export default async function HalamanAdmin({ searchParams }) {
   const daftarKategori = Object.entries(ringkasanKategori).sort(
     (a, b) => b[1] - a[1]
   );
+
+  // Ambil data klik WhatsApp dari database
+  const { data: dataKlik, error: errorKlik } = await supabase
+    .from("klik_whatsapp")
+    .select("produk_id");
+
+  if (errorKlik) {
+    throw new Error(
+      `Gagal mengambil data klik WhatsApp: ${errorKlik.message}`
+    );
+  }
+
+  // Hitung jumlah klik setiap produk
+  const jumlahKlikProduk = (dataKlik ?? []).reduce((hasil, item) => {
+    const id = String(item.produk_id);
+    hasil[id] = (hasil[id] || 0) + 1;
+    return hasil;
+  }, {});
+
+  // Urutkan dan ambil 5 produk dengan klik terbanyak
+  const produkTerlaris = produk
+    .map((item) => ({
+      ...item,
+      jumlahKlik: jumlahKlikProduk[String(item.id)] || 0,
+    }))
+    .filter((item) => item.jumlahKlik > 0)
+    .sort((a, b) => b.jumlahKlik - a.jumlahKlik)
+    .slice(0, 5);
 
   // Query pencarian dan pagination langsung dari database
   const posisiAwal = (nomorHalaman - 1) * PRODUK_PER_HALAMAN;
@@ -190,6 +218,69 @@ export default async function HalamanAdmin({ searchParams }) {
             Kategori produk yang tersedia
           </p>
         </div>
+      </section>
+
+      {/* Produk terlaris berdasarkan klik WhatsApp */}
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-xl font-bold">
+            5 Produk Terlaris
+          </h2>
+
+          <p className="mt-1 text-sm text-teks-lembut">
+            Berdasarkan jumlah klik tombol Pesan via WhatsApp.
+          </p>
+        </div>
+
+        {produkTerlaris.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-garis">
+            <div className="divide-y divide-garis">
+              {produkTerlaris.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-4 bg-latar p-4"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-utama text-lg font-extrabold text-white">
+                      {index + 1}
+                    </span>
+
+                    <div className="min-w-0">
+                      <p className="truncate font-bold">
+                        {item.nama}
+                      </p>
+
+                      <p className="mt-1 text-sm text-teks-lembut">
+                        {item.kategori || "Tanpa kategori"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-xl font-extrabold text-utama">
+                      {item.jumlahKlik}
+                    </p>
+
+                    <p className="text-xs text-teks-lembut">
+                      Klik WhatsApp
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-garis bg-latar p-6">
+            <p className="font-semibold">
+              Belum ada data produk terlaris.
+            </p>
+
+            <p className="mt-2 text-sm text-teks-lembut">
+              Data akan muncul setelah pengunjung mengklik tombol
+              Pesan via WhatsApp pada produk.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Ringkasan produk per kategori */}
