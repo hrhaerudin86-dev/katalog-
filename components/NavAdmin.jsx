@@ -33,6 +33,10 @@ export default function NavAdmin() {
         Log Aktivitas
       </Link>
 
+      <Link href="/admin/import" className="font-semibold hover:text-utama">
+        Import CSV
+      </Link>
+
       <Link href="/admin/password" className="font-semibold hover:text-utama">
         Ganti password
       </Link>
