@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,13 +5,15 @@ import { toko } from "@/lib/toko";
 import { formatRupiah } from "@/lib/format";
 import { catatKlikWhatsApp } from "@/app/produk/klik-whatsapp";
 
-export default function TombolWhatsApp({ produk }) {
+export default function TombolWhatsApp({ produk, nomorWhatsApp }) {
   const stok = Math.max(0, Math.floor(Number(produk.stok ?? 0)));
   const stokHabis = stok <= 0;
 
   const [jumlah, setJumlah] = useState(1);
 
   const totalHarga = produk.harga * jumlah;
+
+  const nomorTujuan = nomorWhatsApp || toko.nomorWhatsApp;
 
   const pesan = [
     "Halo, saya mau pesan:",
@@ -22,7 +23,7 @@ export default function TombolWhatsApp({ produk }) {
     `Total harga: ${formatRupiah(totalHarga)}`,
   ].join("\n");
 
-  const linkWhatsApp = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;
+  const linkWhatsApp = `https://wa.me/${nomorTujuan}?text=${encodeURIComponent(pesan)}`;
 
   function handleKlikWhatsApp() {
     catatKlikWhatsApp(produk.id).catch((error) => {

@@ -2,6 +2,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toko } from "@/lib/toko";
+import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
 import { KeranjangProvider } from "@/components/KeranjangProvider";
 
 export const metadata = {
@@ -75,7 +76,9 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const pengaturan = await ambilPengaturanToko();
+
   return (
     <html lang="id">
       <head>
@@ -90,13 +93,16 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
         />
       </head>
+
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <KeranjangProvider>
-          <Header />
+          <Header pengaturan={pengaturan} />
+
           <main className="mx-auto w-full max-w-5xl flex-1 px-4">
             {children}
           </main>
-          <Footer />
+
+          <Footer pengaturan={pengaturan} />
         </KeranjangProvider>
       </body>
     </html>

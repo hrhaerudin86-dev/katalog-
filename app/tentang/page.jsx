@@ -1,9 +1,15 @@
-
 import Link from "next/link";
 import { toko } from "@/lib/toko";
+import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
 
-export default function HalamanTentang() {
-  const nomorWhatsApp = toko.nomorWhatsApp.replace(/\D/g, "");
+export const dynamic = "force-dynamic";
+
+export default async function HalamanTentang() {
+  const pengaturan = await ambilPengaturanToko();
+
+  const nomorWhatsApp = (
+    pengaturan.nomorWhatsApp || toko.nomorWhatsApp
+  ).replace(/\D/g, "");
 
   return (
     <section className="flex flex-col gap-8 py-12">
@@ -13,7 +19,7 @@ export default function HalamanTentang() {
         </p>
 
         <h1 className="mt-3 text-4xl font-extrabold">
-          {toko.nama}
+          {pengaturan.nama || toko.nama}
         </h1>
 
         <p className="mt-3 text-xl font-semibold">
@@ -45,22 +51,28 @@ export default function HalamanTentang() {
         <div className="mt-5 flex flex-col gap-4">
           <div>
             <p className="text-sm text-teks-lembut">Nama Toko</p>
-            <p className="font-semibold">{toko.nama}</p>
+            <p className="font-semibold">
+              {pengaturan.nama || toko.nama}
+            </p>
           </div>
 
           <div>
             <p className="text-sm text-teks-lembut">Alamat</p>
-            <p className="font-semibold">{toko.alamat}</p>
+            <p className="font-semibold">
+              {pengaturan.alamat || toko.alamat}
+            </p>
           </div>
 
           <div>
             <p className="text-sm text-teks-lembut">Jam Operasional</p>
-            <p className="font-semibold">{toko.jamBuka}</p>
+            <p className="font-semibold">
+              {pengaturan.jamBuka || toko.jamBuka}
+            </p>
           </div>
 
           <div>
             <p className="text-sm text-teks-lembut">WhatsApp</p>
-            <p className="font-semibold">{toko.nomorWhatsApp}</p>
+            <p className="font-semibold">{nomorWhatsApp}</p>
           </div>
         </div>
 

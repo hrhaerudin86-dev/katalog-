@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
@@ -9,6 +8,7 @@ import GaleriProduk from "@/components/GaleriProduk";
 import CatatProdukDilihat from "@/components/CatatProdukDilihat";
 import FormUlasan from "@/components/FormUlasan";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
 import { formatRupiah } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +18,7 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
   const query = await searchParams;
 
   const supabase = await createSupabaseServerClient();
+  const pengaturan = await ambilPengaturanToko();
 
   const { data: produk, error } = await supabase
     .from("produk")
@@ -125,7 +126,12 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
           </p>
 
           <TombolTambahKeranjang produk={produk} />
-          <TombolWhatsApp produk={produk} />
+
+          <TombolWhatsApp
+            produk={produk}
+            nomorWhatsApp={pengaturan.nomorWhatsApp}
+          />
+
           <TombolBagikan namaProduk={produk.nama} />
         </div>
       </article>

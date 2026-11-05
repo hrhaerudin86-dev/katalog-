@@ -1,6 +1,6 @@
-
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
+import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
 import FilterProduk from "@/components/FilterProduk";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +10,8 @@ export default async function HalamanKatalog() {
   let daftarProduk = [];
   let daftarBanner = [];
   let pesanError = "";
+
+  const pengaturan = await ambilPengaturanToko();
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -54,7 +56,7 @@ export default async function HalamanKatalog() {
     <>
       <section className="py-10 sm:py-14">
         <h1 className="max-w-2xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          {toko.nama}
+          {pengaturan.nama || toko.nama}
         </h1>
 
         <p className="mt-3 max-w-xl text-lg text-teks-lembut">
@@ -62,7 +64,7 @@ export default async function HalamanKatalog() {
         </p>
 
         <p className="mt-4 text-sm text-teks-lembut">
-          {toko.jamBuka}
+          {pengaturan.jamBuka || toko.jamBuka}
         </p>
       </section>
 

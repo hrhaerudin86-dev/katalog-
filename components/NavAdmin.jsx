@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions";
 
@@ -9,39 +8,28 @@ export default function NavAdmin() {
         Dashboard & Produk
       </Link>
 
-      <Link
-        href="/admin/kategori"
-        className="font-semibold hover:text-utama"
-      >
+      <Link href="/admin/kategori" className="font-semibold hover:text-utama">
         Kelola Kategori
       </Link>
 
-      <Link
-        href="/admin/ulasan"
-        className="font-semibold hover:text-utama"
-      >
+      <Link href="/admin/ulasan" className="font-semibold hover:text-utama">
         Moderasi Ulasan
       </Link>
 
-      <Link
-        href="/admin/banner"
-        className="font-semibold hover:text-utama"
-      >
+      <Link href="/admin/banner" className="font-semibold hover:text-utama">
         Kelola Banner
       </Link>
 
-      <Link
-        href="/admin/password"
-        className="font-semibold hover:text-utama"
-      >
+      <Link href="/admin/pengaturan" className="font-semibold hover:text-utama">
+        Pengaturan Toko
+      </Link>
+
+      <Link href="/admin/password" className="font-semibold hover:text-utama">
         Ganti password
       </Link>
 
       <form action={logoutAdmin} className="ml-auto">
-        <button
-          type="submit"
-          className="text-teks-lembut hover:text-bahaya"
-        >
+        <button type="submit" className="text-teks-lembut hover:text-bahaya">
           Keluar
         </button>
       </form>

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { toko } from "@/lib/toko";
 import { useKeranjang } from "@/components/KeranjangProvider";
 import TombolMode from "@/components/TombolMode";
 
-export default function Header() {
+export default function Header({ pengaturan }) {
   const { jumlahItem, siap } = useKeranjang();
 
   return (
@@ -15,7 +14,7 @@ export default function Header() {
           href="/"
           className="text-lg font-extrabold tracking-tight text-utama"
         >
-          {toko.nama}
+          {pengaturan?.nama || "SIRKULA"}
         </Link>
 
         <div className="flex items-center gap-2">
