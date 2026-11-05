@@ -11,6 +11,14 @@ import FormProduk from "@/components/FormProduk";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { updateProdukAdmin } from "@/app/admin/actions";
 
+import {
+  tambahVarianProduk,
+  ubahVarianProduk,
+  hapusVarianProduk,
+} from "./varian-actions";
+
+import { formatRupiah } from "@/lib/format";
+
 export default async function HalamanUbahProduk({
   params,
   searchParams,
@@ -18,7 +26,6 @@ export default async function HalamanUbahProduk({
   const { id } = await params;
   const query = await searchParams;
 
-  // Periksa login admin
   const cookieStore = await cookies();
 
   const supabaseAuth = createServerClient(
@@ -30,9 +37,11 @@ export default async function HalamanUbahProduk({
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {}
         },
       },
     }
@@ -47,12 +56,12 @@ export default async function HalamanUbahProduk({
     redirect("/admin/login");
   }
 
-  // Ambil data produk dan kategori
   const supabase = createSupabaseServerClient();
 
   const [
     { data: produk, error: errorProduk },
     { data: daftarKategori, error: errorKategori },
+    { data: daftarVarian, error: errorVarian },
   ] = await Promise.all([
     supabase
       .from("produk")
@@ -64,6 +73,12 @@ export default async function HalamanUbahProduk({
       .from("kategori")
       .select("id, nama")
       .order("nama", { ascending: true }),
+
+    supabase
+      .from("produk_varian")
+      .select("id, produk_id, nama_varian, harga")
+      .eq("produk_id", id)
+      .order("id", { ascending: true }),
   ]);
 
   if (errorProduk) {
@@ -74,13 +89,16 @@ export default async function HalamanUbahProduk({
     throw new Error(`Gagal mengambil kategori: ${errorKategori.message}`);
   }
 
+  if (errorVarian) {
+    throw new Error(`Gagal mengambil varian: ${errorVarian.message}`);
+  }
+
   if (!produk) {
     notFound();
   }
 
   const simpanPerubahan = updateProdukAdmin.bind(null, id);
 
-  // Nilai dari URL diprioritaskan jika validasi sebelumnya gagal
   const formValues = {
     nama: query?.nama ?? produk.nama ?? "",
     harga: query?.harga ?? produk.harga ?? "",
@@ -97,7 +115,6 @@ export default async function HalamanUbahProduk({
     deskripsi: query?.deskripsi ?? produk.deskripsi ?? "",
   };
 
-  // Pesan error per kolom
   const formErrors = {
     nama: query?.errorNama ?? "",
     harga: query?.errorHarga ?? "",
@@ -125,6 +142,175 @@ export default async function HalamanUbahProduk({
         formValues={formValues}
         formErrors={formErrors}
       />
+
+      <section className="flex flex-col gap-5 rounded-2xl border border-garis bg-permukaan p-5">
+        <div>
+          <h2 className="text-xl font-extrabold">
+            Kelola Varian Harga
+          </h2>
+          <p className="mt-1 text-sm text-teks-lembut">
+            Tambahkan pilihan ukuran atau varian dengan harga berbeda
+            untuk {produk.nama}.
+          </p>
+        </div>
+
+        {query?.errorVarian && (
+          <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+            {query.errorVarian}
+          </p>
+        )}
+
+        {query?.successVarian && (
+          <p className="rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-700">
+            {query.successVarian}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <h3 className="font-bold">Tambah varian baru</h3>
+
+          <form
+            action={tambahVarianProduk}
+            className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+          >
+            <input
+              type="hidden"
+              name="produk_id"
+              value={produk.id}
+            />
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Nama varian
+              <input
+                type="text"
+                name="nama_varian"
+                placeholder="Contoh: 250 ml"
+                maxLength={100}
+                required
+                className="rounded-xl border border-garis bg-latar px-4 py-3 font-normal outline-none focus:border-teks"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Harga (Rp)
+              <input
+                type="number"
+                name="harga"
+                min="0"
+                step="1"
+                placeholder="Contoh: 25000"
+                required
+                className="rounded-xl border border-garis bg-latar px-4 py-3 font-normal outline-none focus:border-teks"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="rounded-xl bg-utama px-5 py-3 font-bold text-white hover:opacity-90"
+            >
+              Tambah varian
+            </button>
+          </form>
+        </div>
+
+        <div className="border-t border-garis pt-5">
+          <h3 className="mb-3 font-bold">
+            Daftar varian ({daftarVarian?.length ?? 0})
+          </h3>
+
+          {!daftarVarian || daftarVarian.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-garis p-5 text-center text-sm text-teks-lembut">
+              Belum ada varian untuk produk ini.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {daftarVarian.map((varian) => (
+                <div
+                  key={varian.id}
+                  className="rounded-xl border border-garis p-4"
+                >
+                  <form
+                    action={ubahVarianProduk}
+                    className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
+                  >
+                    <input
+                      type="hidden"
+                      name="produk_id"
+                      value={produk.id}
+                    />
+
+                    <input
+                      type="hidden"
+                      name="varian_id"
+                      value={varian.id}
+                    />
+
+                    <label className="flex flex-col gap-2 text-sm font-semibold">
+                      Nama varian
+                      <input
+                        type="text"
+                        name="nama_varian"
+                        defaultValue={varian.nama_varian}
+                        maxLength={100}
+                        required
+                        className="rounded-xl border border-garis bg-latar px-3 py-2 font-normal outline-none focus:border-teks"
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-2 text-sm font-semibold">
+                      Harga (Rp)
+                      <input
+                        type="number"
+                        name="harga"
+                        min="0"
+                        step="1"
+                        defaultValue={varian.harga}
+                        required
+                        className="rounded-xl border border-garis bg-latar px-3 py-2 font-normal outline-none focus:border-teks"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-garis px-4 py-2 font-semibold hover:bg-latar"
+                    >
+                      Simpan
+                    </button>
+                  </form>
+
+                  <form
+                    action={hapusVarianProduk}
+                    className="mt-3 flex justify-end"
+                  >
+                    <input
+                      type="hidden"
+                      name="produk_id"
+                      value={produk.id}
+                    />
+
+                    <input
+                      type="hidden"
+                      name="varian_id"
+                      value={varian.id}
+                    />
+
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Hapus varian
+                    </button>
+                  </form>
+
+                  <p className="mt-2 text-sm text-teks-lembut">
+                    Harga tersimpan: {formatRupiah(varian.harga)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

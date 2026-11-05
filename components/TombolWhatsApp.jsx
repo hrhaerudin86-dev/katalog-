@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -5,20 +6,37 @@ import { toko } from "@/lib/toko";
 import { formatRupiah } from "@/lib/format";
 import { catatKlikWhatsApp } from "@/app/produk/klik-whatsapp";
 
-export default function TombolWhatsApp({ produk, nomorWhatsApp }) {
+export default function TombolWhatsApp({
+  produk,
+  nomorWhatsApp,
+  varian = [],
+}) {
   const stok = Math.max(0, Math.floor(Number(produk.stok ?? 0)));
   const stokHabis = stok <= 0;
 
   const [jumlah, setJumlah] = useState(1);
+  const [varianTerpilih, setVarianTerpilih] = useState(
+    varian.length > 0 ? String(varian[0].id) : ""
+  );
 
-  const totalHarga = produk.harga * jumlah;
+  const varianAktif = varian.find(
+    (item) => String(item.id) === varianTerpilih
+  );
 
+  const hargaSatuan = varianAktif
+    ? Number(varianAktif.harga)
+    : Number(produk.harga);
+
+  const totalHarga = hargaSatuan * jumlah;
   const nomorTujuan = nomorWhatsApp || toko.nomorWhatsApp;
 
   const pesan = [
     "Halo, saya mau pesan:",
     `Nama produk: ${produk.nama}`,
-    `Harga satuan: ${formatRupiah(produk.harga)}`,
+    ...(varianAktif
+      ? [`Varian/Ukuran: ${varianAktif.nama_varian}`]
+      : []),
+    `Harga satuan: ${formatRupiah(hargaSatuan)}`,
     `Jumlah: ${jumlah}`,
     `Total harga: ${formatRupiah(totalHarga)}`,
   ].join("\n");
@@ -46,6 +64,41 @@ export default function TombolWhatsApp({ produk, nomorWhatsApp }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {varian.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="pilihan-varian"
+            className="text-sm font-semibold"
+          >
+            Pilih ukuran / varian
+          </label>
+
+          <select
+            id="pilihan-varian"
+            value={varianTerpilih}
+            onChange={(event) =>
+              setVarianTerpilih(event.target.value)
+            }
+            className="w-full rounded-lg border border-garis bg-white px-4 py-3 text-teks"
+          >
+            {varian.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.nama_varian} — {formatRupiah(item.harga)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="rounded-lg bg-harga-latar p-3">
+        <p className="text-sm text-teks-lembut">
+          Harga satuan
+        </p>
+        <p className="text-xl font-bold text-harga">
+          {formatRupiah(hargaSatuan)}
+        </p>
+      </div>
+
       <p className="text-sm text-teks-lembut">
         Stok tersedia: {stok}
       </p>
@@ -58,7 +111,9 @@ export default function TombolWhatsApp({ produk, nomorWhatsApp }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setJumlah((nilai) => Math.max(1, nilai - 1))}
+            onClick={() =>
+              setJumlah((nilai) => Math.max(1, nilai - 1))
+            }
             disabled={jumlah <= 1}
             className="h-11 w-11 rounded-lg border border-garis font-bold disabled:opacity-40"
             aria-label="Kurangi jumlah"
@@ -72,7 +127,9 @@ export default function TombolWhatsApp({ produk, nomorWhatsApp }) {
 
           <button
             type="button"
-            onClick={() => setJumlah((nilai) => Math.min(stok, nilai + 1))}
+            onClick={() =>
+              setJumlah((nilai) => Math.min(stok, nilai + 1))
+            }
             disabled={jumlah >= stok}
             className="h-11 w-11 rounded-lg border border-garis font-bold disabled:opacity-40"
             aria-label="Tambah jumlah"

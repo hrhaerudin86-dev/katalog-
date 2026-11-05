@@ -1,3 +1,4 @@
+
 import { formatRupiah } from "@/lib/format";
 import Tombol from "@/components/Tombol";
 import TombolHapus from "@/components/TombolHapus";
@@ -81,11 +82,21 @@ export default function TabelProduk({ daftarProduk }) {
 
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={produk.foto_url}
-                    alt=""
-                    className="h-10 w-10 rounded-md object-cover"
-                  />
+                  {produk.foto_url ? (
+                    <img
+                      src={produk.foto_url}
+                      alt={`Foto ${produk.nama}`}
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-md bg-permukaan text-xs text-teks-lembut"
+                      aria-label="Foto belum tersedia"
+                    >
+                      Foto
+                    </div>
+                  )}
+
                   <span className="font-semibold">{produk.nama}</span>
                 </div>
               </td>

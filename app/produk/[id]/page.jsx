@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
@@ -32,6 +33,18 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
   }
 
   if (!produk) notFound();
+
+  const { data: varian, error: errorVarian } = await supabase
+    .from("produk_varian")
+    .select("id, produk_id, nama_varian, harga")
+    .eq("produk_id", produk.id)
+    .order("id", { ascending: true });
+
+  if (errorVarian) {
+    throw new Error(`Gagal mengambil varian produk: ${errorVarian.message}`);
+  }
+
+  const daftarVarian = varian ?? [];
 
   const { data: ulasan, error: errorUlasan } = await supabase
     .from("ulasan_produk")
@@ -106,19 +119,23 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
 
           <h1 className="text-3xl font-extrabold">{produk.nama}</h1>
 
-          {adaDiskon ? (
-            <div className="flex flex-col items-start gap-1">
-              <span className="text-base text-teks-lembut line-through">
-                {formatRupiah(hargaNormal)}
-              </span>
-              <span className="rounded-md bg-harga-latar px-3 py-1 text-2xl font-bold text-harga">
-                {formatRupiah(hargaDiskon)}
-              </span>
-            </div>
-          ) : (
-            <p className="self-start rounded-md bg-harga-latar px-3 py-1 text-xl font-bold text-harga">
-              {formatRupiah(produk.harga)}
-            </p>
+          {daftarVarian.length === 0 && (
+            <>
+              {adaDiskon ? (
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-base text-teks-lembut line-through">
+                    {formatRupiah(hargaNormal)}
+                  </span>
+                  <span className="rounded-md bg-harga-latar px-3 py-1 text-2xl font-bold text-harga">
+                    {formatRupiah(hargaDiskon)}
+                  </span>
+                </div>
+              ) : (
+                <p className="self-start rounded-md bg-harga-latar px-3 py-1 text-xl font-bold text-harga">
+                  {formatRupiah(produk.harga)}
+                </p>
+              )}
+            </>
           )}
 
           <p className="leading-relaxed text-teks-lembut">
@@ -130,6 +147,7 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
           <TombolWhatsApp
             produk={produk}
             nomorWhatsApp={pengaturan.nomorWhatsApp}
+            varian={daftarVarian}
           />
 
           <TombolBagikan namaProduk={produk.nama} />
