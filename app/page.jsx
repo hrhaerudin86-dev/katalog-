@@ -1,3 +1,4 @@
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
 import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
@@ -16,13 +17,14 @@ export default async function HalamanKatalog() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // Ambil produk aktif
+    // Ambil produk aktif sesuai urutan yang ditentukan admin
     const { data, error } = await supabase
       .from("produk")
       .select(
-        "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
+        "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at, urutan"
       )
       .eq("aktif", true)
+      .order("urutan", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false });
 
     if (error) {

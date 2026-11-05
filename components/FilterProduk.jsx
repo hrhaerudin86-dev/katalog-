@@ -10,7 +10,7 @@ const JUMLAH_PER_TAMPILAN = 12;
 export default function FilterProduk({ daftarProduk = [] }) {
   const [kataKunci, setKataKunci] = useState("");
   const [kategoriDipilih, setKategoriDipilih] = useState("Semua");
-  const [urutan, setUrutan] = useState("terbaru");
+  const [urutan, setUrutan] = useState("urutan-admin");
   const [jumlahDitampilkan, setJumlahDitampilkan] =
     useState(JUMLAH_PER_TAMPILAN);
   const [produkDipilih, setProdukDipilih] = useState([]);
@@ -37,19 +37,45 @@ export default function FilterProduk({ daftarProduk = [] }) {
 
     return [...hasilFilter].sort((a, b) => {
       switch (urutan) {
+        case "urutan-admin": {
+          const posisiA =
+            a.urutan == null ? Infinity : Number(a.urutan);
+          const posisiB =
+            b.urutan == null ? Infinity : Number(b.urutan);
+
+          return (
+            posisiA - posisiB ||
+            new Date(b.created_at || 0) -
+              new Date(a.created_at || 0)
+          );
+        }
+
         case "terlama":
-          return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+          return (
+            new Date(a.created_at || 0) -
+            new Date(b.created_at || 0)
+          );
+
         case "harga-termurah":
           return Number(a.harga || 0) - Number(b.harga || 0);
+
         case "harga-termahal":
           return Number(b.harga || 0) - Number(a.harga || 0);
+
         case "nama-az":
           return (a.nama || "").localeCompare(b.nama || "", "id");
+
         case "nama-za":
           return (b.nama || "").localeCompare(a.nama || "", "id");
+
         case "terbaru":
+          return (
+            new Date(b.created_at || 0) -
+            new Date(a.created_at || 0)
+          );
+
         default:
-          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          return 0;
       }
     });
   }, [daftarProduk, kataKunci, kategoriDipilih, urutan]);
@@ -116,6 +142,7 @@ export default function FilterProduk({ daftarProduk = [] }) {
           aria-label="Urutkan produk"
           className="w-full rounded-xl border border-garis bg-permukaan px-4 py-3 text-sm outline-none focus:border-teks sm:w-auto"
         >
+          <option value="urutan-admin">Urutan pilihan admin</option>
           <option value="terbaru">Terbaru</option>
           <option value="terlama">Terlama</option>
           <option value="harga-termurah">Harga termurah</option>

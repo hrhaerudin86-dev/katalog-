@@ -124,6 +124,7 @@ export default async function HalamanAdmin({ searchParams }) {
     count,
     error,
   } = await queryProduk
+    .order("urutan", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(posisiAwal, posisiAkhir);
 
