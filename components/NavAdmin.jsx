@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions";
 
@@ -26,6 +27,10 @@ export default function NavAdmin() {
 
       <Link href="/admin/akun" className="font-semibold hover:text-utama">
         Kelola Akun Admin
+      </Link>
+
+      <Link href="/admin/log-aktivitas" className="font-semibold hover:text-utama">
+        Log Aktivitas
       </Link>
 
       <Link href="/admin/password" className="font-semibold hover:text-utama">

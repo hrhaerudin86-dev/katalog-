@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { catatAktivitasAdmin } from "@/lib/log-aktivitas";
 
 const BUCKET_FOTO = "produk";
 const MAKSIMAL_UKURAN = 5 * 1024 * 1024;
@@ -216,7 +217,9 @@ export async function logoutAdmin() {
 
 export async function gantiPasswordAdmin(formData) {
   const passwordBaru = String(formData.get("password_baru") || "");
-  const konfirmasiPassword = String(formData.get("konfirmasi_password") || "");
+  const konfirmasiPassword = String(
+    formData.get("konfirmasi_password") || ""
+  );
 
   if (!passwordBaru || !konfirmasiPassword) {
     redirect("/admin/password?error=Semua%20kolom%20wajib%20diisi");
@@ -231,7 +234,10 @@ export async function gantiPasswordAdmin(formData) {
   }
 
   const supabase = await createSupabaseAuthClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError || !user) redirect("/admin/login");
 
@@ -248,7 +254,10 @@ export async function gantiPasswordAdmin(formData) {
 
 export async function tambahProdukAdmin(formData) {
   const supabase = await createSupabaseAuthClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError || !user) redirect("/admin/login");
 
@@ -281,11 +290,15 @@ export async function tambahProdukAdmin(formData) {
   }
 
   if (stok === null) {
-    redirect("/admin/produk/baru?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200");
+    redirect(
+      "/admin/produk/baru?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200"
+    );
   }
 
   if (harga_diskon === undefined) {
-    redirect("/admin/produk/baru?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal");
+    redirect(
+      "/admin/produk/baru?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal"
+    );
   }
 
   if (badge === undefined) {
@@ -303,28 +316,42 @@ export async function tambahProdukAdmin(formData) {
     redirect(`/admin/produk/baru?error=${encodeURIComponent(foto.error)}`);
   }
 
-  const { error } = await supabase.from("produk").insert({
-    nama,
-    harga,
-    harga_diskon,
-    badge,
-    stok,
-    kategori,
-    foto_url: foto.foto_url || "",
-    foto_galeri: foto.foto_galeri,
-    deskripsi,
-  });
+  const { data: produkBaru, error } = await supabase
+    .from("produk")
+    .insert({
+      nama,
+      harga,
+      harga_diskon,
+      badge,
+      stok,
+      kategori,
+      foto_url: foto.foto_url || "",
+      foto_galeri: foto.foto_galeri,
+      deskripsi,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     redirect(`/admin/produk/baru?error=${encodeURIComponent(error.message)}`);
   }
+
+  await catatAktivitasAdmin({
+    admin: user,
+    aksi: "tambah_produk",
+    produkId: produkBaru.id,
+    namaProduk: nama,
+  });
 
   redirect("/admin");
 }
 
 export async function updateProdukAdmin(id, formData) {
   const supabase = await createSupabaseAuthClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError || !user) redirect("/admin/login");
 
@@ -355,11 +382,15 @@ export async function updateProdukAdmin(id, formData) {
   }
 
   if (stok === null) {
-    redirect(`/admin/produk/${id}/ubah?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200`);
+    redirect(
+      `/admin/produk/${id}/ubah?error=Stok%20harus%20berupa%20bilangan%20bulat%20minimal%200`
+    );
   }
 
   if (harga_diskon === undefined) {
-    redirect(`/admin/produk/${id}/ubah?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal`);
+    redirect(
+      `/admin/produk/${id}/ubah?error=Harga%20diskon%20harus%20lebih%20kecil%20dari%20harga%20normal`
+    );
   }
 
   if (badge === undefined) {
@@ -396,14 +427,35 @@ export async function updateProdukAdmin(id, formData) {
     redirect(`/admin/produk/${id}/ubah?error=${encodeURIComponent(error.message)}`);
   }
 
+  await catatAktivitasAdmin({
+    admin: user,
+    aksi: "ubah_produk",
+    produkId: id,
+    namaProduk: nama,
+  });
+
   redirect("/admin");
 }
 
 export async function hapusProdukAdmin(id) {
   const supabase = await createSupabaseAuthClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError || !user) redirect("/admin/login");
+
+  // Ambil nama produk sebelum dihapus agar log menyimpan nama sebenarnya.
+  const { data: produk, error: cekError } = await supabase
+    .from("produk")
+    .select("id, nama")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (cekError || !produk) {
+    redirect("/admin?error=Produk%20tidak%20ditemukan");
+  }
 
   const { data, error } = await supabase
     .from("produk")
@@ -418,6 +470,13 @@ export async function hapusProdukAdmin(id) {
   if (!data || data.length === 0) {
     redirect("/admin?error=Produk%20tidak%20ditemukan");
   }
+
+  await catatAktivitasAdmin({
+    admin: user,
+    aksi: "hapus_produk",
+    produkId: id,
+    namaProduk: produk.nama,
+  });
 
   redirect("/admin");
 }
