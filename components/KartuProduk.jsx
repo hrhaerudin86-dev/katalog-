@@ -4,6 +4,16 @@ import { formatRupiah } from "@/lib/format";
 import TombolTambahKeranjang from "@/components/TombolTambahKeranjang";
 import TombolFavorit from "@/components/TombolFavorit";
 
+function buatSlug(nama) {
+  return String(nama || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export default function KartuProduk({ produk }) {
   const stokHabis = Number(produk.stok ?? 0) <= 0;
 
@@ -18,6 +28,8 @@ export default function KartuProduk({ produk }) {
 
   const badgeValid = ["Baru", "Terlaris"].includes(produk.badge);
 
+  const slugKategori = buatSlug(produk.kategori);
+
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-garis bg-latar">
       <div className="relative">
@@ -26,11 +38,17 @@ export default function KartuProduk({ produk }) {
           className="group flex flex-1 flex-col"
         >
           <div className="relative">
-            <img
-              src={produk.foto_url}
-              alt={produk.nama}
-              className="aspect-square w-full bg-permukaan object-cover"
-            />
+            {produk.foto_url ? (
+              <img
+                src={produk.foto_url}
+                alt={produk.nama}
+                className="aspect-square w-full bg-permukaan object-cover"
+              />
+            ) : (
+              <div className="flex aspect-square w-full items-center justify-center bg-permukaan text-sm text-teks-lembut">
+                Foto belum tersedia
+              </div>
+            )}
 
             {stokHabis && (
               <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
@@ -46,10 +64,6 @@ export default function KartuProduk({ produk }) {
           </div>
 
           <div className="flex flex-1 flex-col gap-2 p-3">
-            <p className="text-xs text-teks-lembut">
-              {produk.kategori}
-            </p>
-
             <h3 className="font-semibold leading-snug group-hover:text-utama">
               {produk.nama}
             </h3>
@@ -77,7 +91,16 @@ export default function KartuProduk({ produk }) {
         <TombolFavorit produkId={produk.id} />
       </div>
 
-      <div className="p-3 pt-0">
+      <div className="flex flex-col gap-2 p-3 pt-0">
+        {produk.kategori && (
+          <Link
+            href={`/kategori/${slugKategori}`}
+            className="w-fit text-xs text-teks-lembut hover:text-utama hover:underline"
+          >
+            {produk.kategori}
+          </Link>
+        )}
+
         <TombolTambahKeranjang produk={produk} />
       </div>
     </div>
