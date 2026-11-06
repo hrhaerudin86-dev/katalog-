@@ -8,6 +8,7 @@ import KartuProduk from "@/components/KartuProduk";
 import GaleriProduk from "@/components/GaleriProduk";
 import CatatProdukDilihat from "@/components/CatatProdukDilihat";
 import FormUlasan from "@/components/FormUlasan";
+import TanyaAIProduk from "@/components/TanyaAIProduk";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ambilPengaturanToko } from "@/lib/pengaturan-toko";
 import { formatRupiah } from "@/lib/format";
@@ -153,6 +154,10 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
           <TombolBagikan namaProduk={produk.nama} />
         </div>
       </article>
+
+      <section className="py-8">
+        <TanyaAIProduk produkId={produk.id} />
+      </section>
 
       <section className="flex flex-col gap-5 py-8">
         <div>
