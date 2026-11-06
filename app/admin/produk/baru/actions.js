@@ -57,9 +57,11 @@ export async function generateDeskripsiAI(nama, kategori) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
+      console.error("Konfigurasi Gemini API belum tersedia di server.");
+
       return {
         success: false,
-        error: "GEMINI_API_KEY belum diatur di server.",
+        error: "Layanan AI sedang tidak tersedia. Silakan hubungi admin.",
       };
     }
 
@@ -103,18 +105,18 @@ Jangan menambahkan fakta yang tidak diketahui.`,
       }
     );
 
-    const hasil = await response.json();
-
     if (!response.ok) {
-      console.error("Gemini API error:", hasil);
+      console.error("Gemini API gagal merespons:", {
+        status: response.status,
+      });
 
       return {
         success: false,
-        error:
-          hasil.error?.message ||
-          `Gemini gagal merespons (HTTP ${response.status}).`,
+        error: "Layanan AI gagal memproses permintaan. Silakan coba lagi.",
       };
     }
+
+    const hasil = await response.json();
 
     const deskripsi = hasil.candidates?.[0]?.content?.parts
       ?.map((part) => part.text || "")
@@ -122,11 +124,11 @@ Jangan menambahkan fakta yang tidak diketahui.`,
       .trim();
 
     if (!deskripsi) {
-      console.error("Respons Gemini kosong:", hasil);
+      console.error("Gemini API tidak menghasilkan deskripsi yang valid.");
 
       return {
         success: false,
-        error: "Gemini tidak menghasilkan deskripsi.",
+        error: "AI tidak berhasil menghasilkan deskripsi. Silakan coba lagi.",
       };
     }
 
@@ -135,14 +137,14 @@ Jangan menambahkan fakta yang tidak diketahui.`,
       deskripsi,
     };
   } catch (error) {
-    console.error("Generate deskripsi error:", error);
+    console.error("Terjadi kesalahan saat membuat deskripsi AI:", error);
 
     return {
       success: false,
       error:
         error.name === "TimeoutError" || error.name === "AbortError"
-          ? "Koneksi ke Gemini terlalu lama. Silakan coba lagi."
-          : "Terjadi kesalahan saat menghubungi Gemini.",
+          ? "Koneksi ke layanan AI terlalu lama. Silakan coba lagi."
+          : "Terjadi kesalahan saat menghubungi layanan AI.",
     };
   }
 }

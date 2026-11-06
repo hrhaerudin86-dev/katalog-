@@ -28,7 +28,7 @@ export default async function HalamanKatalog() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      throw new Error(error.message);
+      throw error;
     }
 
     daftarProduk = data ?? [];
@@ -48,10 +48,7 @@ export default async function HalamanKatalog() {
   } catch (error) {
     console.error("Gagal mengambil katalog dari Supabase:", error);
 
-    pesanError =
-      error instanceof Error
-        ? error.message
-        : "Terjadi kesalahan yang tidak diketahui saat mengambil produk.";
+    pesanError = "Katalog belum dapat dimuat dari database. Silakan coba lagi nanti.";
   }
 
   return (
@@ -141,7 +138,7 @@ export default async function HalamanKatalog() {
             role="alert"
             className="rounded-xl border border-bahaya/30 bg-bahaya/5 p-4 text-sm text-bahaya"
           >
-            Katalog belum dapat dimuat dari database. Detail: {pesanError}
+            {pesanError}
           </p>
         ) : daftarProduk.length === 0 ? (
           <p className="rounded-xl border border-garis bg-permukaan p-4 text-sm text-teks-lembut">

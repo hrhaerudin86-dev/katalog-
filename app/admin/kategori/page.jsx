@@ -56,7 +56,8 @@ export default async function HalamanKategori({ searchParams }) {
     .order("nama", { ascending: true });
 
   if (error) {
-    throw new Error(`Gagal mengambil kategori: ${error.message}`);
+    console.error("Gagal mengambil kategori:", error);
+    throw new Error("Gagal memuat kategori. Silakan coba lagi.");
   }
 
   return (

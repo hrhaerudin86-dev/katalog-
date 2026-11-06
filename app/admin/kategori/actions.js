@@ -52,9 +52,12 @@ export async function tambahKategori(formData) {
     .insert({ nama });
 
   if (error) {
-    const pesan = error.code === "23505"
-      ? "Kategori%20sudah%20ada"
-      : encodeURIComponent(error.message);
+    console.error("Gagal menambahkan kategori:", error);
+
+    const pesan =
+      error.code === "23505"
+        ? "Kategori%20sudah%20ada"
+        : "Gagal%20menambahkan%20kategori.%20Silakan%20coba%20lagi";
 
     redirect(`/admin/kategori?error=${pesan}`);
   }
@@ -83,6 +86,10 @@ export async function ubahKategori(formData) {
     .maybeSingle();
 
   if (cekKategori || !kategoriLama) {
+    if (cekKategori) {
+      console.error("Gagal memeriksa kategori:", cekKategori);
+    }
+
     redirect("/admin/kategori?error=Kategori%20tidak%20ditemukan");
   }
 
@@ -95,9 +102,11 @@ export async function ubahKategori(formData) {
       .eq("kategori", namaLama);
 
     if (ubahProduk) {
+      console.error("Gagal memperbarui kategori pada produk:", ubahProduk);
+
       redirect(
         `/admin/kategori?error=${encodeURIComponent(
-          "Gagal memperbarui kategori pada produk."
+          "Gagal memperbarui kategori pada produk. Silakan coba lagi."
         )}`
       );
     }
@@ -109,17 +118,24 @@ export async function ubahKategori(formData) {
     .eq("id", id);
 
   if (error) {
+    console.error("Gagal mengubah kategori:", error);
+
     // Kembalikan nama kategori produk jika perubahan kategori gagal.
     if (namaLama !== nama) {
-      await supabase
+      const { error: rollbackError } = await supabase
         .from("produk")
         .update({ kategori: namaLama })
         .eq("kategori", nama);
+
+      if (rollbackError) {
+        console.error("Gagal mengembalikan kategori produk:", rollbackError);
+      }
     }
 
-    const pesan = error.code === "23505"
-      ? "Nama%20kategori%20sudah%20digunakan"
-      : encodeURIComponent(error.message);
+    const pesan =
+      error.code === "23505"
+        ? "Nama%20kategori%20sudah%20digunakan"
+        : "Gagal%20mengubah%20kategori.%20Silakan%20coba%20lagi";
 
     redirect(`/admin/kategori?error=${pesan}`);
   }
@@ -147,6 +163,10 @@ export async function hapusKategori(formData) {
     .maybeSingle();
 
   if (cekKategori || !kategori) {
+    if (cekKategori) {
+      console.error("Gagal memeriksa kategori sebelum penghapusan:", cekKategori);
+    }
+
     redirect("/admin/kategori?error=Kategori%20tidak%20ditemukan");
   }
 
@@ -156,6 +176,7 @@ export async function hapusKategori(formData) {
     .eq("kategori", kategori.nama);
 
   if (cekProduk) {
+    console.error("Gagal memeriksa produk dalam kategori:", cekProduk);
     redirect("/admin/kategori?error=Gagal%20memeriksa%20produk");
   }
 
@@ -173,7 +194,13 @@ export async function hapusKategori(formData) {
     .eq("id", id);
 
   if (error) {
-    redirect(`/admin/kategori?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal menghapus kategori:", error);
+
+    redirect(
+      `/admin/kategori?error=${encodeURIComponent(
+        "Gagal menghapus kategori. Silakan coba lagi."
+      )}`
+    );
   }
 
   revalidatePath("/admin/kategori");
@@ -181,4 +208,49 @@ export async function hapusKategori(formData) {
   revalidatePath("/admin");
 
   redirect("/admin/kategori?success=Kategori%20berhasil%20dihapus");
+}
+
+export async function toggleStatusProduk(formData) {
+  const supabase = await periksaAdmin();
+
+  const id = Number(formData.get("id"));
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    redirect("/admin?error=ID%20produk%20tidak%20valid");
+  }
+
+  const { data: produk, error: cekProduk } = await supabase
+    .from("produk")
+    .select("id, aktif")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (cekProduk || !produk) {
+    if (cekProduk) {
+      console.error("Gagal memeriksa produk:", cekProduk);
+    }
+
+    redirect("/admin?error=Produk%20tidak%20ditemukan");
+  }
+
+  const { error } = await supabase
+    .from("produk")
+    .update({ aktif: !produk.aktif })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Gagal mengubah status produk:", error);
+
+    redirect(
+      `/admin?error=${encodeURIComponent(
+        "Gagal mengubah status produk. Silakan coba lagi."
+      )}`
+    );
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath(`/produk/${id}`);
+
+  redirect("/admin?success=Status%20produk%20berhasil%20diubah");
 }

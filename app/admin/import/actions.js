@@ -297,9 +297,11 @@ export async function importProdukCSV(formData) {
         .insert(hasilValidasi);
 
       if (error) {
+        console.error("Gagal menyimpan hasil import CSV:", error);
+
         return {
           success: false,
-          pesan: `Gagal menyimpan data: ${error.message}`,
+          pesan: "Gagal menyimpan data produk ke database. Silakan coba lagi.",
           berhasil: 0,
           gagal: [
             ...daftarGagal,
@@ -325,9 +327,15 @@ export async function importProdukCSV(formData) {
       gagal: daftarGagal,
     };
   } catch (error) {
+    console.error("Kesalahan saat memproses import CSV:", error);
+
     return {
       success: false,
-      pesan: error.message || "Terjadi kesalahan saat membaca CSV.",
+      pesan:
+        error.message ===
+        "Format CSV tidak valid: tanda kutip tidak berpasangan."
+          ? "Format CSV tidak valid: tanda kutip tidak berpasangan."
+          : "Terjadi kesalahan saat membaca atau memproses file CSV.",
       berhasil: 0,
       gagal: [],
     };

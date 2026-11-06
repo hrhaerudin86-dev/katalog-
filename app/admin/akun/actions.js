@@ -1,3 +1,4 @@
+
 "use server";
 
 import { createServerClient } from "@supabase/ssr";
@@ -66,7 +67,8 @@ export async function tambahAkunAdmin(formData) {
   });
 
   if (error) {
-    buatRedirect(error.message);
+    console.error("Gagal menambahkan akun admin:", error);
+    buatRedirect("Gagal menambahkan akun admin. Silakan coba lagi.");
   }
 
   revalidatePath("/admin/akun");
@@ -98,7 +100,8 @@ export async function ubahStatusAkunAdmin(formData) {
   );
 
   if (error) {
-    buatRedirect(error.message);
+    console.error("Gagal mengubah status akun admin:", error);
+    buatRedirect("Gagal mengubah status akun admin. Silakan coba lagi.");
   }
 
   revalidatePath("/admin/akun");
@@ -129,7 +132,8 @@ export async function hapusAkunAdmin(formData) {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
   if (error) {
-    buatRedirect(error.message);
+    console.error("Gagal menghapus akun admin:", error);
+    buatRedirect("Gagal menghapus akun admin. Silakan coba lagi.");
   }
 
   revalidatePath("/admin/akun");

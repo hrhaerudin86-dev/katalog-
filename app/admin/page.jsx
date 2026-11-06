@@ -59,9 +59,8 @@ export default async function HalamanAdmin({ searchParams }) {
     .select("id, kategori, nama");
 
   if (errorRingkasan) {
-    throw new Error(
-      `Gagal mengambil ringkasan produk: ${errorRingkasan.message}`
-    );
+    console.error("Gagal mengambil ringkasan produk:", errorRingkasan);
+    throw new Error("Gagal memuat ringkasan produk. Silakan coba lagi.");
   }
 
   const produk = semuaProduk ?? [];
@@ -84,9 +83,8 @@ export default async function HalamanAdmin({ searchParams }) {
     .select("produk_id");
 
   if (errorKlik) {
-    throw new Error(
-      `Gagal mengambil data klik WhatsApp: ${errorKlik.message}`
-    );
+    console.error("Gagal mengambil data klik WhatsApp:", errorKlik);
+    throw new Error("Gagal memuat data klik WhatsApp. Silakan coba lagi.");
   }
 
   // Hitung jumlah klik setiap produk
@@ -129,7 +127,8 @@ export default async function HalamanAdmin({ searchParams }) {
     .range(posisiAwal, posisiAkhir);
 
   if (error) {
-    throw new Error(`Gagal mengambil produk: ${error.message}`);
+    console.error("Gagal mengambil daftar produk:", error);
+    throw new Error("Gagal memuat daftar produk. Silakan coba lagi.");
   }
 
   const totalProduk = count ?? 0;

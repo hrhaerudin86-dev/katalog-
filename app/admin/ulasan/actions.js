@@ -59,7 +59,12 @@ export async function ubahStatusUlasan(formData) {
     .eq("id", id)
     .maybeSingle();
 
-  if (cariError || !ulasan) {
+  if (cariError) {
+    console.error("Gagal mencari ulasan:", cariError);
+    throw new Error("Gagal memeriksa ulasan. Silakan coba lagi.");
+  }
+
+  if (!ulasan) {
     throw new Error("Ulasan tidak ditemukan.");
   }
 
@@ -69,7 +74,8 @@ export async function ubahStatusUlasan(formData) {
     .eq("id", id);
 
   if (error) {
-    throw new Error("Gagal memperbarui status ulasan.");
+    console.error("Gagal memperbarui status ulasan:", error);
+    throw new Error("Gagal memperbarui status ulasan. Silakan coba lagi.");
   }
 
   revalidatePath("/admin/ulasan");

@@ -23,7 +23,9 @@ async function periksaAdmin() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch {}
+          } catch {
+            // Cookie tidak dapat diubah pada konteks tertentu.
+          }
         },
       },
     }
@@ -95,6 +97,10 @@ export async function tambahVarianProduk(formData) {
     .maybeSingle();
 
   if (errorProduk || !produk) {
+    if (errorProduk) {
+      console.error("Gagal memeriksa produk sebelum menambahkan varian:", errorProduk);
+    }
+
     redirect("/admin?error=Produk%20tidak%20ditemukan");
   }
 
@@ -107,10 +113,12 @@ export async function tambahVarianProduk(formData) {
     });
 
   if (error) {
+    console.error("Gagal menambahkan varian produk:", error);
+
     const pesan =
       error.code === "23505"
         ? "Nama varian tersebut sudah digunakan."
-        : error.message;
+        : "Gagal menambahkan varian. Silakan coba lagi.";
 
     redirect(
       `/admin/produk/${hasil.produkId}/ubah?errorVarian=${encodeURIComponent(pesan)}`
@@ -153,10 +161,12 @@ export async function ubahVarianProduk(formData) {
     .eq("produk_id", hasil.produkId);
 
   if (error) {
+    console.error("Gagal mengubah varian produk:", error);
+
     const pesan =
       error.code === "23505"
         ? "Nama varian tersebut sudah digunakan."
-        : error.message;
+        : "Gagal memperbarui varian. Silakan coba lagi.";
 
     redirect(
       `/admin/produk/${hasil.produkId}/ubah?errorVarian=${encodeURIComponent(pesan)}`
@@ -195,8 +205,12 @@ export async function hapusVarianProduk(formData) {
     .eq("produk_id", produkId);
 
   if (error) {
+    console.error("Gagal menghapus varian produk:", error);
+
     redirect(
-      `/admin/produk/${produkId}/ubah?errorVarian=${encodeURIComponent(error.message)}`
+      `/admin/produk/${produkId}/ubah?errorVarian=${encodeURIComponent(
+        "Gagal menghapus varian. Silakan coba lagi."
+      )}`
     );
   }
 

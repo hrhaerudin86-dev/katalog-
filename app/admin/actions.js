@@ -69,7 +69,11 @@ async function uploadFoto(file) {
     });
 
   if (error) {
-    return { url: null, error: error.message };
+    console.error("Gagal mengunggah foto produk:", error);
+    return {
+      url: null,
+      error: "Gagal mengunggah foto. Silakan coba lagi.",
+    };
   }
 
   const { data } = supabaseAdmin.storage
@@ -203,7 +207,8 @@ export async function loginAdmin(formData) {
   });
 
   if (error) {
-    redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
+    console.error("Login admin gagal:", error);
+    redirect("/admin/login?error=Email%20atau%20password%20tidak%20sesuai");
   }
 
   redirect("/admin");
@@ -246,7 +251,8 @@ export async function gantiPasswordAdmin(formData) {
   });
 
   if (error) {
-    redirect(`/admin/password?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal mengganti password admin:", error);
+    redirect("/admin/password?error=Gagal%20mengubah%20password.%20Silakan%20coba%20lagi.");
   }
 
   redirect("/admin/password?success=Password%20berhasil%20diubah");
@@ -308,7 +314,8 @@ export async function tambahProdukAdmin(formData) {
   let foto;
   try {
     foto = await prosesFoto(formData);
-  } catch {
+  } catch (error) {
+    console.error("Gagal memproses foto produk:", error);
     redirect("/admin/produk/baru?error=Gagal%20mengunggah%20foto");
   }
 
@@ -333,7 +340,8 @@ export async function tambahProdukAdmin(formData) {
     .single();
 
   if (error) {
-    redirect(`/admin/produk/baru?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal menambahkan produk:", error);
+    redirect("/admin/produk/baru?error=Gagal%20menyimpan%20produk.%20Silakan%20coba%20lagi.");
   }
 
   await catatAktivitasAdmin({
@@ -400,7 +408,8 @@ export async function updateProdukAdmin(id, formData) {
   let foto;
   try {
     foto = await prosesFoto(formData);
-  } catch {
+  } catch (error) {
+    console.error("Gagal memproses foto produk:", error);
     redirect(`/admin/produk/${id}/ubah?error=Gagal%20mengunggah%20foto`);
   }
 
@@ -424,7 +433,8 @@ export async function updateProdukAdmin(id, formData) {
     .eq("id", id);
 
   if (error) {
-    redirect(`/admin/produk/${id}/ubah?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal memperbarui produk:", error);
+    redirect(`/admin/produk/${id}/ubah?error=Gagal%20memperbarui%20produk.%20Silakan%20coba%20lagi.`);
   }
 
   await catatAktivitasAdmin({
@@ -464,7 +474,8 @@ export async function hapusProdukAdmin(id) {
     .select("id");
 
   if (error) {
-    redirect(`/admin?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal menghapus produk:", error);
+    redirect("/admin?error=Gagal%20menghapus%20produk.%20Silakan%20coba%20lagi.");
   }
 
   if (!data || data.length === 0) {
@@ -517,7 +528,8 @@ export async function toggleStatusProduk(formData) {
     .eq("id", id);
 
   if (error) {
-    redirect(`/admin?error=${encodeURIComponent(error.message)}`);
+    console.error("Gagal mengubah status produk:", error);
+    redirect("/admin?error=Gagal%20mengubah%20status%20produk.%20Silakan%20coba%20lagi.");
   }
 
   revalidatePath("/admin");

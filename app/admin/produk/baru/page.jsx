@@ -52,7 +52,8 @@ export default async function HalamanTambahProduk({ searchParams }) {
     .order("nama", { ascending: true });
 
   if (error) {
-    throw new Error(`Gagal mengambil kategori: ${error.message}`);
+    console.error("Gagal mengambil kategori untuk form produk:", error);
+    throw new Error("Gagal memuat daftar kategori. Silakan coba lagi.");
   }
 
   // Ambil kembali nilai form setelah validasi gagal

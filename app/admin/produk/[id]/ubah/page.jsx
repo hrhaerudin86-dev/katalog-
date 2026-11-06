@@ -41,7 +41,9 @@ export default async function HalamanUbahProduk({
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch {}
+          } catch {
+            // Cookie tidak dapat diubah pada konteks tertentu.
+          }
         },
       },
     }
@@ -82,15 +84,18 @@ export default async function HalamanUbahProduk({
   ]);
 
   if (errorProduk) {
-    throw new Error(`Gagal mengambil produk: ${errorProduk.message}`);
+    console.error("Gagal mengambil data produk:", errorProduk);
+    throw new Error("Gagal memuat data produk. Silakan coba lagi.");
   }
 
   if (errorKategori) {
-    throw new Error(`Gagal mengambil kategori: ${errorKategori.message}`);
+    console.error("Gagal mengambil data kategori:", errorKategori);
+    throw new Error("Gagal memuat data kategori. Silakan coba lagi.");
   }
 
   if (errorVarian) {
-    throw new Error(`Gagal mengambil varian: ${errorVarian.message}`);
+    console.error("Gagal mengambil data varian:", errorVarian);
+    throw new Error("Gagal memuat data varian. Silakan coba lagi.");
   }
 
   if (!produk) {

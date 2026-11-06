@@ -1,3 +1,4 @@
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const BASE_URL = "https://katalog-bay-psi.vercel.app";
@@ -10,7 +11,8 @@ export default async function sitemap() {
     .select("id, created_at");
 
   if (error) {
-    throw new Error(`Gagal mengambil data sitemap: ${error.message}`);
+    console.error("Gagal mengambil data sitemap:", error);
+    throw new Error("Gagal memuat sitemap.");
   }
 
   const halamanUtama = [

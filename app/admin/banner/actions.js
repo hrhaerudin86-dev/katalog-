@@ -50,7 +50,11 @@ export async function simpanBanner(formData) {
     throw new Error("Judul wajib diisi dan maksimal 150 karakter.");
   }
 
-  if (teks.length > 1000 || gambar_url.length > 2000 || tautan.length > 2000) {
+  if (
+    teks.length > 1000 ||
+    gambar_url.length > 2000 ||
+    tautan.length > 2000
+  ) {
     throw new Error("Teks, URL gambar, atau tautan terlalu panjang.");
   }
 
@@ -86,13 +90,19 @@ export async function simpanBanner(formData) {
       })
       .eq("id", id);
 
-    if (error) throw new Error("Gagal mengubah banner.");
+    if (error) {
+      console.error("Gagal mengubah banner:", error);
+      throw new Error("Gagal mengubah banner. Silakan coba lagi.");
+    }
   } else {
     const { error } = await supabase
       .from("banner_promo")
       .insert(dataBanner);
 
-    if (error) throw new Error("Gagal menambahkan banner.");
+    if (error) {
+      console.error("Gagal menambahkan banner:", error);
+      throw new Error("Gagal menambahkan banner. Silakan coba lagi.");
+    }
   }
 
   revalidatePath("/admin/banner");
@@ -121,7 +131,10 @@ export async function ubahStatusBanner(formData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error("Gagal mengubah status banner.");
+  if (error) {
+    console.error("Gagal mengubah status banner:", error);
+    throw new Error("Gagal mengubah status banner. Silakan coba lagi.");
+  }
 
   revalidatePath("/admin/banner");
   revalidatePath("/");

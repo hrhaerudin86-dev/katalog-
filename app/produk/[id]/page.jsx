@@ -30,7 +30,8 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Gagal mengambil detail produk: ${error.message}`);
+    console.error("Gagal mengambil detail produk:", error);
+    throw new Error("Gagal memuat detail produk. Silakan coba lagi.");
   }
 
   if (!produk) notFound();
@@ -42,7 +43,8 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
     .order("id", { ascending: true });
 
   if (errorVarian) {
-    throw new Error(`Gagal mengambil varian produk: ${errorVarian.message}`);
+    console.error("Gagal mengambil varian produk:", errorVarian);
+    throw new Error("Gagal memuat varian produk. Silakan coba lagi.");
   }
 
   const daftarVarian = varian ?? [];
@@ -55,7 +57,8 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
     .order("created_at", { ascending: false });
 
   if (errorUlasan) {
-    throw new Error("Gagal mengambil ulasan produk.");
+    console.error("Gagal mengambil ulasan produk:", errorUlasan);
+    throw new Error("Gagal memuat ulasan produk. Silakan coba lagi.");
   }
 
   const daftarUlasan = ulasan ?? [];
@@ -78,7 +81,7 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
   let produkTerkait = [];
 
   if (produk.kategori) {
-    const { data } = await supabase
+    const { data, error: errorProdukTerkait } = await supabase
       .from("produk")
       .select(
         "id, nama, harga, harga_diskon, badge, stok, deskripsi, foto_url, kategori, created_at"
@@ -88,6 +91,10 @@ export default async function HalamanDetailProduk({ params, searchParams }) {
       .neq("id", id)
       .order("created_at", { ascending: false })
       .limit(4);
+
+    if (errorProdukTerkait) {
+      console.error("Gagal mengambil produk terkait:", errorProdukTerkait);
+    }
 
     produkTerkait = data ?? [];
   }

@@ -82,7 +82,8 @@ export async function simpanPengaturanToko(formData) {
     );
 
   if (error) {
-    throw new Error("Gagal menyimpan pengaturan toko.");
+    console.error("Gagal menyimpan pengaturan toko:", error);
+    throw new Error("Gagal menyimpan pengaturan toko. Silakan coba lagi.");
   }
 
   revalidatePath("/");
