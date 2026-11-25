@@ -1,10 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { useKeranjang } from "@/components/KeranjangProvider";
 import { formatRupiah } from "@/lib/format";
-import { toko } from "@/lib/toko";
 
 export default function HalamanKeranjang() {
   const {
@@ -26,21 +24,6 @@ export default function HalamanKeranjang() {
       diskon < normal
       ? diskon
       : normal;
-  }
-
-  function checkoutWhatsApp() {
-    const daftarPesanan = items
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.nama}\n   ${item.jumlah} x ${formatRupiah(hargaItem(item))} = ${formatRupiah(hargaItem(item) * item.jumlah)}`
-      )
-      .join("\n\n");
-
-    const pesan = `Halo ${toko.nama}, saya ingin memesan:\n\n${daftarPesanan}\n\nTotal: ${formatRupiah(totalHarga)}\n\nMohon informasi lebih lanjut. Terima kasih.`;
-
-    const url = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;
-
-    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   if (!siap) {
@@ -97,21 +80,12 @@ export default function HalamanKeranjang() {
 
                   <div className="flex flex-wrap items-center gap-3">
                     <label
-                      htmlFor={`jumlah-${item.id}`}
-                      className="text-sm text-teks-lembut"
-                    >
-                      Jumlah:
-                    </label>
-
-                    <input
-                      id={`jumlah-${item.id}`}
+                      htmlFor={`jumlah-${item.id}`} className="text-sm text-teks-lembut" > Jumlah: </label>  <input id={`jumlah-${item.id}`}
                       type="number"
                       min="1"
                       max={item.stok}
                       value={item.jumlah}
-                      onChange={(e) =>
-                        ubahJumlah(item.id, e.target.value)
-                      }
+                      onChange={(e) => ubahJumlah(item.id, e.target.value)}
                       className="w-20 rounded-lg border border-garis bg-latar px-2 py-1"
                     />
 
@@ -125,8 +99,7 @@ export default function HalamanKeranjang() {
                   </div>
 
                   <p className="text-sm font-bold">
-                    Subtotal:{" "}
-                    {formatRupiah(hargaItem(item) * item.jumlah)}
+                    Subtotal: {formatRupiah(hargaItem(item) * item.jumlah)}
                   </p>
                 </div>
               </div>
@@ -146,13 +119,12 @@ export default function HalamanKeranjang() {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={checkoutWhatsApp}
-              className="mt-5 w-full rounded-xl bg-utama px-5 py-3 font-bold text-white transition hover:opacity-90"
+            <Link
+              href="/checkout"
+              className="mt-5 block w-full rounded-xl bg-utama px-5 py-3 text-center font-bold text-white transition hover:opacity-90"
             >
-              Pesan Semua via WhatsApp
-            </button>
+              Lanjut ke Checkout
+            </Link>
 
             <Link
               href="/"
