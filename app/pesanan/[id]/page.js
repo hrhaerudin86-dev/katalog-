@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buatSignatureSimulasi } from "@/lib/services/payment";
+import UploadBuktiKomplain from "@/components/UploadBuktiKomplain";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,12 @@ export default async function DetailPesanan({ params }) {
   const { data: shipment } = await supabase.from("shipments").select("*").eq("order_id", id).single();
   const { data: complaint } = await supabase.from("complaints").select("*").eq("order_id", id).single();
   const { data: review } = await supabase.from("reviews").select("*").eq("order_id", id).single();
+  const { data: messages } = await supabase
+    .from("complaint_messages")
+    .select("*")
+    .eq("order_id", id)
+    .order("created_at", { ascending: true });
 
-  // 1. Simulasi bayar lunas (Sandbox)
   async function simulasiBayarAction() {
     "use server";
     const supabaseServer = createSupabaseServerClient();
@@ -45,7 +50,6 @@ export default async function DetailPesanan({ params }) {
     redirect(`/pesanan/${order.id}`);
   }
 
-  // 2. Konfirmasi Pesanan Selesai + Catat Komisi 5% ke seller_ledgers
   async function konfirmasiSelesaiAction() {
     "use server";
     const supabaseServer = createSupabaseServerClient();
@@ -60,7 +64,6 @@ export default async function DetailPesanan({ params }) {
       .update({ shipment_status: "delivered", updated_at: new Date().toISOString() })
       .eq("order_id", order.id);
 
-    // Hitung komisi 5% HANYA dari subtotal produk (bukan ongkir)
     const grossProduct = Number(order.subtotal || 0);
     const commissionRate = 0.05;
     const commissionAmount = Math.round(grossProduct * commissionRate);
@@ -83,11 +86,11 @@ export default async function DetailPesanan({ params }) {
     redirect(`/pesanan/${order.id}`);
   }
 
-  // 3. Ajukan Komplain / Retur
   async function ajukanKomplainAction(formData) {
     "use server";
     const reason = String(formData.get("reason") || "").trim();
     const description = String(formData.get("description") || "").trim();
+    const evidenceUrl = String(formData.get("evidence_url") || "").trim() || null;
     if (!reason || !description) return;
 
     const supabaseServer = createSupabaseServerClient();
@@ -97,6 +100,7 @@ export default async function DetailPesanan({ params }) {
       buyer_id: order.buyer_id,
       reason,
       description,
+      evidence_url: evidenceUrl,
       status: "open",
     });
 
@@ -109,7 +113,23 @@ export default async function DetailPesanan({ params }) {
     redirect(`/pesanan/${order.id}`);
   }
 
-  // 4. Kirim Ulasan Produk (hanya setelah pesanan selesai)
+  async function kirimPesanDiskusiAction(formData) {
+    "use server";
+    const message = String(formData.get("message") || "").trim();
+    if (!message) return;
+
+    const supabaseServer = createSupabaseServerClient();
+    await supabaseServer.from("complaint_messages").insert({
+      order_id: order.id,
+      sender_role: "buyer",
+      sender_name: order.buyer_name || "Pembeli",
+      message,
+    });
+
+    revalidatePath(`/pesanan/${order.id}`);
+    redirect(`/pesanan/${order.id}`);
+  }
+
   async function kirimUlasanAction(formData) {
     "use server";
     const rating = Number(formData.get("rating") || 5);
@@ -197,7 +217,7 @@ export default async function DetailPesanan({ params }) {
             </button>
           </form>
 
-          <details className="mt-2 rounded-xl border border-garis bg-permukaan p-4">
+          <details open className="mt-2 rounded-xl border border-garis bg-permukaan p-4">
             <summary className="cursor-pointer font-semibold text-bahaya">
               Barang bermasalah? Ajukan Komplain / Retur
             </summary>
@@ -219,6 +239,7 @@ export default async function DetailPesanan({ params }) {
                 placeholder="Jelaskan kendala barang yang diterima..."
                 className="rounded-xl border border-garis bg-latar px-3 py-2 text-sm"
               />
+              <UploadBuktiKomplain orderId={order.id} />
               <button
                 type="submit"
                 className="rounded-xl bg-bahaya px-4 py-2.5 text-xs font-bold text-white"
@@ -236,8 +257,53 @@ export default async function DetailPesanan({ params }) {
           <h2 className="text-base font-bold text-bahaya">Komplain Sedang Diproses ({complaint.status})</h2>
           <p className="mt-1"><strong>Alasan:</strong> {complaint.reason}</p>
           <p className="mt-1 text-teks-lembut">{complaint.description}</p>
+          {complaint.evidence_url && (
+            <a
+              href={complaint.evidence_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-xs font-semibold text-utama underline"
+            >
+              Lihat Bukti Terlampir →
+            </a>
+          )}
         </section>
       )}
+
+      {/* Diskusi Transaksi */}
+      <section className="rounded-2xl border border-garis bg-latar p-6 text-sm">
+        <h2 className="text-base font-bold">Diskusi Transaksi</h2>
+        <div className="mt-3 flex flex-col gap-2">
+          {(messages ?? []).length === 0 ? (
+            <p className="rounded-xl bg-permukaan p-3 text-xs text-teks-lembut">
+              Belum ada pesan diskusi.
+            </p>
+          ) : (
+            messages.map((m) => (
+              <div key={m.id} className="rounded-xl border border-garis bg-permukaan p-3 text-xs">
+                <p className="font-bold">
+                  {m.sender_name} <span className="text-utama">({m.sender_role})</span>
+                </p>
+                <p className="mt-1 text-sm">{m.message}</p>
+              </div>
+            ))
+          )}
+        </div>
+        <form action={kirimPesanDiskusiAction} className="mt-4 flex gap-2">
+          <input
+            name="message"
+            required
+            placeholder="Tulis pesan diskusi pesanan..."
+            className="flex-1 rounded-xl border border-garis bg-permukaan px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-utama px-4 py-2 text-xs font-bold text-white"
+          >
+            Kirim
+          </button>
+        </form>
+      </section>
 
       {/* Form Ulasan jika pesanan sudah selesai */}
       {order.order_status === "completed" && (

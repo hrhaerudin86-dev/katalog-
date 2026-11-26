@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPenjual() {
+  await requireRole(["seller", "admin"], "/penjual/dashboard");
+
   const supabase = createSupabaseServerClient();
 
   const { data: orders } = await supabase
@@ -20,6 +23,8 @@ export default async function DashboardPenjual() {
 
   async function inputResiAction(formData) {
     "use server";
+    await requireRole(["seller", "admin"], "/penjual/dashboard");
+
     const orderId = String(formData.get("order_id") || "");
     const trackingNumber = String(formData.get("tracking_number") || "").trim();
     if (!orderId || !trackingNumber) return;
