@@ -15,6 +15,18 @@ function buatSlug(teks) {
     .replace(/-+/g, "-");
 }
 
+function normalisasiCoverUrl(rawUrl) {
+  const nilai = String(rawUrl || "").trim();
+  if (!nilai) return null;
+
+  const matchDriveFile = nilai.match(/https?:\/\/drive\.google\.com\/file\/d\/([^/]+)/i);
+  if (matchDriveFile?.[1]) {
+    return `https://drive.google.com/uc?export=view&id=${matchDriveFile[1]}`;
+  }
+
+  return nilai;
+}
+
 export default async function KelolaArtikelAdmin() {
   await requireRole(["admin"], "/admin/artikel");
 
@@ -32,8 +44,9 @@ export default async function KelolaArtikelAdmin() {
     const topic = String(formData.get("topic") || "Edukasi Material").trim();
     const excerpt = String(formData.get("excerpt") || "").trim();
     const content = String(formData.get("content") || "").trim();
-    const coverImage =
-      String(formData.get("cover_image") || formData.get("cover_url") || "").trim() || null;
+    const coverImage = normalisasiCoverUrl(
+      formData.get("cover_image") || formData.get("cover_url")
+    );
     const status = String(formData.get("status") || "published");
 
     if (!title || !content) return;
@@ -62,8 +75,8 @@ export default async function KelolaArtikelAdmin() {
     await requireRole(["admin"], "/admin/artikel");
 
     const id = String(formData.get("id") || "");
-    const coverImage = String(formData.get("cover_image") || "").trim() || null;
-    if (!id || !coverImage) return;
+    const coverImage = normalisasiCoverUrl(formData.get("cover_image"));
+    if (!id) return;
 
     const supabaseServer = await createSupabaseServerClient();
     await supabaseServer
@@ -264,7 +277,10 @@ export default async function KelolaArtikelAdmin() {
               </div>
             </div>
 
-            <form action={perbaruiCoverArtikelAction} className="flex flex-wrap items-center gap-2 border-t border-garis pt-3">
+            <form
+              action={perbaruiCoverArtikelAction}
+              className="flex flex-wrap items-center gap-2 border-t border-garis pt-3"
+            >
               <input type="hidden" name="id" value={art.id} />
               <input
                 type="url"

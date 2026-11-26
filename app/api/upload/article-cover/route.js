@@ -14,7 +14,7 @@ export async function POST(request) {
     }
 
     if (file.type && !file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Berkas harus berupa gambar." }, { status: 400 });
+      return NextResponse.json({ error: "Berkas harus berupa file gambar." }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -27,6 +27,7 @@ export async function POST(request) {
       .from("article-covers")
       .upload(filePath, buffer, {
         contentType: file.type || "image/jpeg",
+        cacheControl: "3600",
         upsert: false,
       });
 
@@ -38,7 +39,12 @@ export async function POST(request) {
       .from("article-covers")
       .getPublicUrl(filePath);
 
-    return NextResponse.json({ url: publicData?.publicUrl || "" });
+    const url = String(publicData?.publicUrl || "").trim();
+    if (!url) {
+      return NextResponse.json({ error: "URL publik gambar gagal dibuat." }, { status: 500 });
+    }
+
+    return NextResponse.json({ url });
   } catch (err) {
     return NextResponse.json(
       { error: err?.message || "Gagal mengunggah gambar cover." },
