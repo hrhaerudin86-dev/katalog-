@@ -32,7 +32,8 @@ export default async function KelolaArtikelAdmin() {
     const topic = String(formData.get("topic") || "Edukasi Material").trim();
     const excerpt = String(formData.get("excerpt") || "").trim();
     const content = String(formData.get("content") || "").trim();
-    const coverUrl = String(formData.get("cover_url") || "").trim() || null;
+    const coverImage =
+      String(formData.get("cover_image") || formData.get("cover_url") || "").trim() || null;
     const status = String(formData.get("status") || "published");
 
     if (!title || !content) return;
@@ -46,7 +47,7 @@ export default async function KelolaArtikelAdmin() {
       topic,
       excerpt,
       content,
-      cover_url: coverUrl,
+      cover_image: coverImage,
       status: ["published", "draft"].includes(status) ? status : "published",
       published_at: status === "published" ? new Date().toISOString() : null,
     });
@@ -181,9 +182,9 @@ export default async function KelolaArtikelAdmin() {
             className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-garis bg-latar p-5 text-sm"
           >
             <div className="flex min-w-0 flex-1 items-start gap-4">
-              {art.cover_url && (
+              {art.cover_image && (
                 <img
-                  src={art.cover_url}
+                  src={art.cover_image}
                   alt={art.title}
                   className="h-16 w-24 shrink-0 rounded-xl border border-garis object-cover"
                 />
