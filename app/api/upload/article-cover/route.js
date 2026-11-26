@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
 
 export async function POST(request) {
   try {
+    await requireRole(["admin"], "/admin/artikel");
+
     const formData = await request.formData();
     const file = formData.get("file");
 
     if (!file || typeof file.arrayBuffer !== "function") {
       return NextResponse.json({ error: "Berkas gambar tidak ditemukan." }, { status: 400 });
+    }
+
+    if (file.type && !file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Berkas harus berupa gambar." }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();

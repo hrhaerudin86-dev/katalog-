@@ -57,6 +57,25 @@ export default async function KelolaArtikelAdmin() {
     revalidatePath("/");
   }
 
+  async function perbaruiCoverArtikelAction(formData) {
+    "use server";
+    await requireRole(["admin"], "/admin/artikel");
+
+    const id = String(formData.get("id") || "");
+    const coverImage = String(formData.get("cover_image") || "").trim() || null;
+    if (!id || !coverImage) return;
+
+    const supabaseServer = await createSupabaseServerClient();
+    await supabaseServer
+      .from("articles")
+      .update({ cover_image: coverImage })
+      .eq("id", id);
+
+    revalidatePath("/admin/artikel");
+    revalidatePath("/artikel");
+    revalidatePath("/");
+  }
+
   async function ubahStatusArtikelAction(formData) {
     "use server";
     await requireRole(["admin"], "/admin/artikel");
@@ -179,69 +198,88 @@ export default async function KelolaArtikelAdmin() {
         {(articles ?? []).map((art) => (
           <div
             key={art.id}
-            className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-garis bg-latar p-5 text-sm"
+            className="flex flex-col gap-4 rounded-2xl border border-garis bg-latar p-5 text-sm"
           >
-            <div className="flex min-w-0 flex-1 items-start gap-4">
-              {art.cover_image && (
-                <img
-                  src={art.cover_image}
-                  alt={art.title}
-                  className="h-16 w-24 shrink-0 rounded-xl border border-garis object-cover"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-permukaan px-2.5 py-0.5 text-xs font-semibold text-utama">
-                    {art.topic}
-                  </span>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                      art.status === "published"
-                        ? "bg-utama/15 text-utama"
-                        : "bg-permukaan text-teks-lembut"
-                    }`}
-                  >
-                    {art.status}
-                  </span>
-                </div>
-                <Link
-                  href={`/artikel/${art.slug}`}
-                  className="mt-2 block font-extrabold hover:text-utama"
-                >
-                  {art.title}
-                </Link>
-                {art.excerpt && (
-                  <p className="mt-1 line-clamp-1 text-xs text-teks-lembut">{art.excerpt}</p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 flex-1 items-start gap-4">
+                {art.cover_image && (
+                  <img
+                    src={art.cover_image}
+                    alt={art.title}
+                    className="h-16 w-24 shrink-0 rounded-xl border border-garis object-cover"
+                  />
                 )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-permukaan px-2.5 py-0.5 text-xs font-semibold text-utama">
+                      {art.topic}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                        art.status === "published"
+                          ? "bg-utama/15 text-utama"
+                          : "bg-permukaan text-teks-lembut"
+                      }`}
+                    >
+                      {art.status}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/artikel/${art.slug}`}
+                    className="mt-2 block font-extrabold hover:text-utama"
+                  >
+                    {art.title}
+                  </Link>
+                  {art.excerpt && (
+                    <p className="mt-1 line-clamp-1 text-xs text-teks-lembut">{art.excerpt}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <form action={ubahStatusArtikelAction}>
+                  <input type="hidden" name="id" value={art.id} />
+                  <input
+                    type="hidden"
+                    name="status"
+                    value={art.status === "published" ? "draft" : "published"}
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-xl border border-garis bg-permukaan px-3 py-1.5 text-xs font-semibold hover:border-utama"
+                  >
+                    {art.status === "published" ? "Jadikan Draft" : "Terbitkan"}
+                  </button>
+                </form>
+
+                <form action={hapusArtikelAction}>
+                  <input type="hidden" name="id" value={art.id} />
+                  <button
+                    type="submit"
+                    className="rounded-xl border border-bahaya/40 px-3 py-1.5 text-xs font-semibold text-bahaya"
+                  >
+                    Hapus
+                  </button>
+                </form>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <form action={ubahStatusArtikelAction}>
-                <input type="hidden" name="id" value={art.id} />
-                <input
-                  type="hidden"
-                  name="status"
-                  value={art.status === "published" ? "draft" : "published"}
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl border border-garis bg-permukaan px-3 py-1.5 text-xs font-semibold hover:border-utama"
-                >
-                  {art.status === "published" ? "Jadikan Draft" : "Terbitkan"}
-                </button>
-              </form>
-
-              <form action={hapusArtikelAction}>
-                <input type="hidden" name="id" value={art.id} />
-                <button
-                  type="submit"
-                  className="rounded-xl border border-bahaya/40 px-3 py-1.5 text-xs font-semibold text-bahaya"
-                >
-                  Hapus
-                </button>
-              </form>
-            </div>
+            <form action={perbaruiCoverArtikelAction} className="flex flex-wrap items-center gap-2 border-t border-garis pt-3">
+              <input type="hidden" name="id" value={art.id} />
+              <input
+                type="url"
+                name="cover_image"
+                defaultValue={art.cover_image || ""}
+                placeholder="Tempel URL gambar cover (https://.../article-covers/...)"
+                className="min-w-[240px] flex-1 rounded-xl border border-garis bg-permukaan px-3 py-1.5 text-xs"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-utama px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90"
+              >
+                Simpan Cover
+              </button>
+            </form>
           </div>
         ))}
       </section>
