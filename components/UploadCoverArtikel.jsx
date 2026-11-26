@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export default function UploadCoverArtikel() {
-  const [coverUrl, setCoverUrl] = useState("");
+  const [coverImage, setCoverImage] = useState("");
   const [statusText, setStatusText] = useState("");
   const [uploading, setUploading] = useState(false);
 
@@ -28,7 +28,7 @@ export default function UploadCoverArtikel() {
         throw new Error(hasil?.error || "Gagal upload gambar.");
       }
 
-      setCoverUrl(hasil.url);
+      setCoverImage(hasil.url);
       setStatusText("Gambar cover berhasil diunggah.");
     } catch (err) {
       setStatusText(err?.message || "Gagal upload gambar.");
@@ -39,7 +39,7 @@ export default function UploadCoverArtikel() {
 
   return (
     <div className="flex flex-col gap-1.5 text-sm font-semibold">
-      <input type="hidden" name="cover_url" value={coverUrl} />
+      <input type="hidden" name="cover_image" value={coverImage} />
       <label htmlFor="input-cover-artikel">Gambar Cover Artikel (Opsional)</label>
       <input
         id="input-cover-artikel"
@@ -53,9 +53,9 @@ export default function UploadCoverArtikel() {
           {uploading ? "Mengunggah..." : statusText}
         </span>
       )}
-      {coverUrl && (
+      {coverImage && (
         <img
-          src={coverUrl}
+          src={coverImage}
           alt="Preview cover artikel"
           className="mt-2 max-h-48 w-fit rounded-xl border border-garis object-cover"
         />
