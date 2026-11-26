@@ -25,7 +25,6 @@ export default async function HalamanKatalog() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // 1. Ambil produk aktif
     const { data, error } = await supabase
       .from("produk")
       .select(
@@ -38,7 +37,6 @@ export default async function HalamanKatalog() {
     if (error) throw error;
     daftarProduk = data ?? [];
 
-    // 2. Ambil banner promo aktif
     const { data: banner, error: errorBanner } = await supabase
       .from("banner_promo")
       .select("id, judul, teks, gambar_url, tautan")
@@ -47,10 +45,9 @@ export default async function HalamanKatalog() {
 
     if (!errorBanner) daftarBanner = banner ?? [];
 
-    // 3. Ambil 3 artikel edukasi terbaru (US-02)
     const { data: artikel, error: errorArtikel } = await supabase
       .from("articles")
-      .select("id, title, slug, topic, excerpt, cover_url, published_at")
+      .select("id, title, slug, topic, excerpt, cover_image, published_at")
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(3);
@@ -61,7 +58,6 @@ export default async function HalamanKatalog() {
     pesanError = "Katalog belum dapat dimuat dari database. Silakan coba lagi nanti.";
   }
 
-  // Ambil daftar kategori unik dari produk aktif (sembunyikan 'Uji Coba')
   const daftarKategori = [
     ...new Set(
       daftarProduk
@@ -72,7 +68,6 @@ export default async function HalamanKatalog() {
 
   return (
     <div className="flex flex-col gap-12 pb-12">
-      {/* 1. HERO / PENGENALAN */}
       <section className="pt-8 sm:pt-12">
         <span className="inline-block rounded-full border border-garis bg-permukaan px-3 py-1 text-xs font-semibold text-utama">
           Circular Economy Marketplace
@@ -106,7 +101,6 @@ export default async function HalamanKatalog() {
         </p>
       </section>
 
-      {/* Banner Promo Aktif (jika ada) */}
       {daftarBanner.length > 0 && (
         <section aria-label="Promo toko" className="flex flex-col gap-5">
           {daftarBanner.map((banner) => {
@@ -151,7 +145,6 @@ export default async function HalamanKatalog() {
         </section>
       )}
 
-      {/* 2. ARTIKEL & INSIGHT (US-02 s.d. US-04) */}
       <section aria-labelledby="judul-artikel" className="flex flex-col gap-4">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -180,9 +173,9 @@ export default async function HalamanKatalog() {
                 className="flex flex-col justify-between overflow-hidden rounded-2xl border border-garis bg-latar transition-colors hover:border-utama"
               >
                 <div>
-                  {item.cover_url && (
+                  {item.cover_image && (
                     <img
-                      src={item.cover_url}
+                      src={item.cover_image}
                       alt={item.title}
                       className="h-40 w-full border-b border-garis object-cover"
                     />
@@ -206,7 +199,6 @@ export default async function HalamanKatalog() {
         )}
       </section>
 
-      {/* 3. KATEGORI MATERIAL (US-05) */}
       {daftarKategori.length > 0 && (
         <section aria-labelledby="judul-kategori" className="flex flex-col gap-4">
           <h2 id="judul-kategori" className="text-xl font-bold">
@@ -226,7 +218,6 @@ export default async function HalamanKatalog() {
         </section>
       )}
 
-      {/* 4. MARKETPLACE (US-06 s.d. US-08) */}
       <section id="marketplace" aria-labelledby="judul-produk" className="flex flex-col gap-5 scroll-mt-6">
         <h2 id="judul-produk" className="text-xl font-bold">
           Marketplace SIRKULA
@@ -245,7 +236,6 @@ export default async function HalamanKatalog() {
         )}
       </section>
 
-      {/* 5. CTA BUKA TOKO (US-40) */}
       <section className="rounded-2xl border border-garis bg-permukaan p-6 sm:p-8">
         <h2 className="text-2xl font-extrabold">
           Punya Material Sisa atau Produk Daur Ulang?
